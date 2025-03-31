@@ -20,4 +20,3 @@ pub mod test;
 extern crate downcast_rs;
 
 pub extern crate halo2_proofs;
-pub extern crate zkwasm_host_circuits;

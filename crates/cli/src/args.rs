@@ -1,4 +1,3 @@
-use circuits_batcher::args::OpenSchema;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -18,13 +17,4 @@ pub(crate) enum Scheme {
 
     #[default]
     Shplonk,
-}
-
-impl From<Scheme> for OpenSchema {
-    fn from(val: Scheme) -> OpenSchema {
-        match val {
-            Scheme::Gwc => OpenSchema::GWC,
-            Scheme::Shplonk => OpenSchema::Shplonk,
-        }
-    }
 }

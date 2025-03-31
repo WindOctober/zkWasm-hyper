@@ -6,11 +6,6 @@ use std::path::Path;
 use std::path::PathBuf;
 
 use anyhow::Result;
-use circuits_batcher::args::HashType;
-use circuits_batcher::proof::ProofGenerationInfo;
-use circuits_batcher::proof::ProofInfo;
-use circuits_batcher::proof::ProofPieceInfo;
-use circuits_batcher::proof::Prover;
 use console::style;
 use delphinus_zkwasm::circuits::ZkWasmCircuit;
 use delphinus_zkwasm::loader::slice::Slices;
@@ -24,6 +19,7 @@ use halo2_proofs::pairing::bn256::Bn256;
 use halo2_proofs::pairing::bn256::G1Affine;
 use halo2_proofs::plonk::CircuitData;
 use halo2_proofs::poly::commitment::Params;
+use halo2_proofs::SerdeFormat;
 use indicatif::ProgressBar;
 use serde::Deserialize;
 use serde::Serialize;
@@ -329,8 +325,7 @@ impl Config {
 
         println!("{} Creating proof(s)...", style("[7/8]").bold().dim(),);
 
-        let mut proof_load_info =
-            ProofGenerationInfo::new(&self.name, self.k as usize, HashType::Poseidon);
+        let mut proof_load_info = ProofGenerationInfo::new(&self.name, self.k as usize);
 
         let progress_bar = ProgressBar::new(if let Some(padding) = padding {
             usize::max(tables.execution_tables.slice_backend.len(), padding) as u64
@@ -475,7 +470,9 @@ impl Config {
         while let Some(proof) = proofs.next() {
             {
                 let mut buf = Vec::new();
-                proof.vkey.write(&mut Cursor::new(&mut buf))?;
+                proof
+                    .vkey
+                    .write(&mut Cursor::new(&mut buf), SerdeFormat::Processed)?;
 
                 #[cfg(feature = "continuation")]
                 if proofs.peek().is_none() {

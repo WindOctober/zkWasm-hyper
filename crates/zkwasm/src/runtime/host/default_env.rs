@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use zkwasm_host_circuits::host::db::TreeDB;
+// use zkwasm_host_circuits::host::db::TreeDB;
 
 use crate::foreign::context::runtime::register_context_foreign;
 use crate::foreign::log_helper::register_log_foreign;
@@ -25,8 +25,8 @@ pub struct ExecutionArg {
     pub context_inputs: Vec<u64>,
     /// indexed witness context
     pub indexed_witness: Rc<RefCell<HashMap<u64, Vec<u64>>>>,
-    /// db src
-    pub tree_db: Option<Rc<RefCell<dyn TreeDB>>>,
+    // /// db src
+    // pub tree_db: Option<Rc<RefCell<dyn TreeDB>>>,
 }
 
 pub struct DefaultHostEnvBuilder {

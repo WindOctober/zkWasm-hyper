@@ -95,11 +95,7 @@ impl SetupArg {
             )?;
 
             match setup_circuit {
-                ZkWasmCircuit::Ongoing(circuit) => SetupArg::_setup_circuit_data(
-                    params,
-                    &circuit,
-                    params_dir.join(name_of_circuit_data(name, is_last_slice)),
-                ),
+                ZkWasmCircuit::Ongoing(circuit) => unimplemented!(),
                 ZkWasmCircuit::LastSliceCircuit(circuit) => SetupArg::_setup_circuit_data(
                     params,
                     &circuit,
@@ -107,12 +103,6 @@ impl SetupArg {
                 ),
             }
         };
-
-        #[cfg(feature = "continuation")]
-        return Ok(CircuitDataConfig {
-            on_going_circuit: setup_circuit(false)?,
-            finalized_circuit: setup_circuit(true)?,
-        });
 
         #[cfg(not(feature = "continuation"))]
         return Ok(CircuitDataConfig {

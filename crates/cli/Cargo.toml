@@ -7,7 +7,6 @@ edition = "2021"
 
 [dependencies]
 env_logger = "0.9.3"
-halo2aggregator-s = { git = "https://github.com/DelphinusLab/halo2aggregator-s.git", tag="on-prove-pairing-0.6.2" }
 log = "0.4.17"
 md5 = "0.7.0"
 sha2 = "0.10.6"
@@ -18,20 +17,16 @@ serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 wabt = "0.10.0"
 delphinus-zkwasm = { path = "../zkwasm" }
-delphinus-host = { path = "../host" }
 anyhow.workspace = true
 bincode.workspace = true
 halo2_proofs.workspace = true
 indicatif = "0.17.7"
 console = "0.15.8"
 cfg-if.workspace = true
-circuits-batcher.workspace = true
-poseidon.workspace = true
 
 [features]
 default = []
-profile = ["delphinus-zkwasm/profile", "circuits-batcher/profile"]
-perf = ["circuits-batcher/perf"]
+profile = ["delphinus-zkwasm/profile"]
 cuda = ["delphinus-zkwasm/cuda"]
 uniform-circuit = ["delphinus-zkwasm/uniform-circuit"]
 continuation = ["uniform-circuit", "delphinus-zkwasm/continuation", "specs/continuation"]
