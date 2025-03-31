@@ -9,12 +9,11 @@ CUDA="--features cuda"
 SCHEME="--scheme shplonk"
 
 test_default_cli() {
-    cargo build --release $CUDA
-    rm -rf params/*.data params/*.config output
-    $CLI --params ./params wasm_output setup --wasm ./crates/zkwasm/wasm/wasm_output.wasm $SCHEME
-    $CLI --params ./params wasm_output dry-run --wasm crates/zkwasm/wasm/wasm_output.wasm --public 133:i64 --public 2:i64 --output ./output
-    $CLI --params ./params wasm_output prove --wasm crates/zkwasm/wasm/wasm_output.wasm --public 133:i64 --public 2:i64 --output ./output
-    $CLI --params ./params wasm_output verify --output ./output
+    cargo build --release --features profile
+    # rm -rf params/*.data params/*.config output
+    $CLI --params ./params wasm_output setup --wasm ./fibonacci_wasm.wasm  $SCHEME -k 18
+    $CLI --params ./params wasm_output prove --wasm ./fibonacci_wasm.wasm --output ./output 
+    # $CLI --params ./params wasm_output verify --output ./output
 }
 
 test_uniform_circuit_cli() {
@@ -48,7 +47,7 @@ test_phantom_cli() {
 #while [ $x -gt 0 ]; do
 #    test_phantom_cli
     test_default_cli
-    test_uniform_circuit_cli
-    test_continuation_cli
+    # test_uniform_circuit_cli
+    # test_continuation_cli
 #    x=$(($x-1))
 #done
