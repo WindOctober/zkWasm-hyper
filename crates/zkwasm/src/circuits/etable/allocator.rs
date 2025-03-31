@@ -30,7 +30,7 @@ use std::marker::PhantomData;
 
 pub(super) trait EventTableCellExpression<F: FieldExt> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
-    fn prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
+    fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
 }
 
 impl<F: FieldExt> EventTableCellExpression<F> for AllocatedCell<F> {
@@ -38,7 +38,7 @@ impl<F: FieldExt> EventTableCellExpression<F> for AllocatedCell<F> {
         nextn!(meta, self.col, self.rot + EVENT_TABLE_ENTRY_ROWS)
     }
 
-    fn prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
+    fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         nextn!(meta, self.col, self.rot - EVENT_TABLE_ENTRY_ROWS)
     }
 }
@@ -50,8 +50,8 @@ macro_rules! impl_cell {
                 self.cell.next_expr(meta)
             }
 
-            fn prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
-                self.cell.prev_expr(meta)
+            fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
+                self.cell._prev_expr(meta)
             }
         }
     };

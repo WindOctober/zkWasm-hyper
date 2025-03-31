@@ -5,7 +5,7 @@ use specs::Tables;
 
 mod helper;
 // mod instruction_statistic;
-
+#[allow(dead_code)]
 pub trait Profiler {
     fn profile_tables(&self);
 }

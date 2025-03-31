@@ -172,11 +172,11 @@ impl<F: FieldExt> ZkWasmCircuit<F> {
     }
 }
 
-trait Encode {
+trait _Encode {
     fn encode(&self) -> BigUint;
 }
 
-pub(self) trait Lookup<F: FieldExt> {
+pub(self) trait _Lookup<F: FieldExt> {
     fn encode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
 
     fn configure_in_table(

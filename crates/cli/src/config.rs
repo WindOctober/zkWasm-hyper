@@ -343,9 +343,6 @@ impl Config {
             println!("skip first {} slice(s)", skip);
         }
 
-        #[cfg(feature = "continuation")]
-        let mut last_post_image_table_commitment: Option<(String, String)> = None;
-
         let mut slices = Slices::new(self.k, tables, padding)?
             .into_iter()
             .enumerate()
@@ -379,21 +376,6 @@ impl Config {
                     Ok(())
                 };
 
-            #[cfg(feature = "continuation")]
-            if _is_finalized_circuit {
-                cached_proving_key_or_read(
-                    &self.circuit_datas.finalized_circuit.circuit_data_md5,
-                    true,
-                    &self.circuit_datas.finalized_circuit.circuit_data_md5,
-                )?
-            } else {
-                cached_proving_key_or_read(
-                    &self.circuit_datas.on_going_circuit.circuit_data_md5,
-                    false,
-                    &self.circuit_datas.on_going_circuit.circuit_data_md5,
-                )?
-            };
-
             #[cfg(not(feature = "continuation"))]
             cached_proving_key_or_read(
                 &self.circuit_datas.finalized_circuit.circuit_data_md5,
@@ -414,14 +396,7 @@ impl Config {
             let pkey = &cached_proving_key.as_ref().unwrap().1;
 
             let proof = match circuit {
-                ZkWasmCircuit::Ongoing(circuit) => proof_piece_info.create_proof::<Bn256, _>(
-                    &circuit,
-                    &vec![instances.clone()],
-                    &params,
-                    pkey,
-                    proof_load_info.hashtype,
-                    self.scheme.into(),
-                ),
+                ZkWasmCircuit::Ongoing(_) => unimplemented!(),
                 ZkWasmCircuit::LastSliceCircuit(circuit) => proof_piece_info
                     .create_proof::<Bn256, _>(
                         &circuit,
@@ -432,37 +407,6 @@ impl Config {
                         self.scheme.into(),
                     ),
             };
-
-            #[cfg(feature = "continuation")]
-            {
-                use crate::utils::get_named_advice_commitment;
-                use delphinus_zkwasm::circuits::image_table::IMAGE_COL_NAME;
-                use delphinus_zkwasm::circuits::post_image_table::POST_IMAGE_TABLE;
-
-                // checks pre image col equals to last's post image col commitment
-                let pre_image_table_msm =
-                    get_named_advice_commitment(pkey.get_vk(), &proof, IMAGE_COL_NAME);
-
-                let last_post_image_table_msm = last_post_image_table_commitment.take();
-                if let Some(last_post_image_table_msm) = last_post_image_table_msm {
-                    assert_eq!(
-                        pre_image_table_msm.x.to_string(),
-                        last_post_image_table_msm.0
-                    );
-                    assert_eq!(
-                        pre_image_table_msm.y.to_string(),
-                        last_post_image_table_msm.1
-                    );
-                }
-
-                let post_image_table_msm =
-                    get_named_advice_commitment(pkey.get_vk(), &proof, POST_IMAGE_TABLE);
-
-                last_post_image_table_commitment = Some((
-                    post_image_table_msm.x.to_string(),
-                    post_image_table_msm.y.to_string(),
-                ));
-            }
 
             proof_piece_info.save_proof_data(&vec![instances.clone()], &proof, output_dir);
 

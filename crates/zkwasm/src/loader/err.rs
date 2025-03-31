@@ -7,9 +7,11 @@ pub enum PreCheckErr {
     // ZkmainTypeNotMatch,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum RuntimeErr {}
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum Error {
     PreCheck(PreCheckErr),

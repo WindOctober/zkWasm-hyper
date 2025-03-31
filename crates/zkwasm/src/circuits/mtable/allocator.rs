@@ -22,7 +22,7 @@ use super::MEMORY_TABLE_ENTRY_ROWS;
 
 pub(super) trait MemoryTableCellExpression<F: FieldExt> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
-    fn prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
+    fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
 }
 
 impl<F: FieldExt> MemoryTableCellExpression<F> for AllocatedCell<F> {
@@ -30,7 +30,7 @@ impl<F: FieldExt> MemoryTableCellExpression<F> for AllocatedCell<F> {
         nextn!(meta, self.col, self.rot + MEMORY_TABLE_ENTRY_ROWS)
     }
 
-    fn prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
+    fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         nextn!(meta, self.col, self.rot - MEMORY_TABLE_ENTRY_ROWS)
     }
 }
@@ -42,8 +42,8 @@ macro_rules! impl_cell {
                 self.cell.next_expr(meta)
             }
 
-            fn prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
-                self.cell.prev_expr(meta)
+            fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
+                self.cell._prev_expr(meta)
             }
         }
     };
@@ -60,7 +60,7 @@ impl<F: FieldExt> MemoryTableCellExpression<F> for AllocatedU32Cell<F> {
             + (self.u16_cells_le[1].next_expr(meta) * constant_from!(1 << 16))
     }
 
-    fn prev_expr(&self, _meta: &mut VirtualCells<'_, F>) -> Expression<F> {
+    fn _prev_expr(&self, _meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         unimplemented!()
     }
 }
