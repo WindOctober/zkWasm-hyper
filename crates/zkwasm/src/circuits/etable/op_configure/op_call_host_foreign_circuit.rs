@@ -8,7 +8,7 @@ use crate::circuits::utils::step_status::StepStatus;
 use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -19,7 +19,7 @@ use specs::external_host_call_table::ExternalHostCallSignature;
 use specs::mtable::LocationType;
 use specs::step::StepInfo;
 
-pub struct ExternalCallHostCircuitConfig<F: FieldExt> {
+pub struct ExternalCallHostCircuitConfig<F: PrimeField> {
     op: AllocatedCommonRangeCell<F>,
     value_is_ret: AllocatedBitCell<F>,
     value_is_not_ret: AllocatedBitCell<F>,
@@ -31,7 +31,7 @@ pub struct ExternalCallHostCircuitConfig<F: FieldExt> {
 
 pub struct ExternalCallHostCircuitConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ExternalCallHostCircuitConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for ExternalCallHostCircuitConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -109,7 +109,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ExternalCallHostCircuitCo
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ExternalCallHostCircuitConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ExternalCallHostCircuitConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_call_host(self.op.expr(meta), self.value_is_ret.expr(meta))
     }

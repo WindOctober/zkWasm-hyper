@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
@@ -16,13 +16,13 @@ use crate::constant_from;
 use crate::nextn;
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedCell<F: FieldExt> {
+pub(crate) struct AllocatedCell<F: PrimeField> {
     pub(crate) col: Column<Advice>,
     pub(crate) rot: i32,
     pub(crate) _mark: PhantomData<F>,
 }
 
-pub(crate) trait CellExpression<F: FieldExt> {
+pub(crate) trait CellExpression<F: PrimeField> {
     fn curr_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
     fn expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         self.curr_expr(meta)
@@ -47,11 +47,11 @@ pub(crate) trait CellExpression<F: FieldExt> {
         ctx: &mut Context<'_, F>,
         value: bool,
     ) -> Result<AssignedCell<F, F>, Error> {
-        self.assign(ctx, if value { F::one() } else { F::zero() })
+        self.assign(ctx, if value { F::ONE } else { F::ZERO })
     }
 }
 
-impl<F: FieldExt> CellExpression<F> for AllocatedCell<F> {
+impl<F: PrimeField> CellExpression<F> for AllocatedCell<F> {
     fn curr_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         nextn!(meta, self.col, self.rot)
     }
@@ -67,30 +67,30 @@ impl<F: FieldExt> CellExpression<F> for AllocatedCell<F> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedU64Cell<F: FieldExt> {
+pub(crate) struct AllocatedU64Cell<F: PrimeField> {
     pub(crate) u16_cells_le: [AllocatedU16Cell<F>; 4],
     pub(crate) u64_cell: AllocatedUnlimitedCell<F>,
 }
 
-impl<F: FieldExt> AllocatedU64Cell<F> {
+impl<F: PrimeField> AllocatedU64Cell<F> {
     pub(crate) fn expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         self.u64_cell.expr(meta)
     }
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedU32Cell<F: FieldExt> {
+pub(crate) struct AllocatedU32Cell<F: PrimeField> {
     pub(crate) u16_cells_le: [AllocatedU16Cell<F>; 2],
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedU32PermutationCell<F: FieldExt> {
+pub(crate) struct AllocatedU32PermutationCell<F: PrimeField> {
     pub(crate) u16_cells_le: [AllocatedU16Cell<F>; 2],
     pub(crate) u32_cell: AllocatedUnlimitedCell<F>,
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedU64CellWithFlagBitDyn<F: FieldExt> {
+pub(crate) struct AllocatedU64CellWithFlagBitDyn<F: PrimeField> {
     pub(crate) u16_cells_le: [AllocatedU16Cell<F>; 4],
     pub(crate) u64_cell: AllocatedUnlimitedCell<F>,
     pub(crate) flag_bit_cell: AllocatedBitCell<F>,
@@ -99,7 +99,7 @@ pub(crate) struct AllocatedU64CellWithFlagBitDyn<F: FieldExt> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedU64CellWithFlagBitDynSign<F: FieldExt> {
+pub(crate) struct AllocatedU64CellWithFlagBitDynSign<F: PrimeField> {
     pub(crate) u16_cells_le: [AllocatedU16Cell<F>; 4],
     pub(crate) u64_cell: AllocatedUnlimitedCell<F>,
     pub(crate) flag_bit_cell: AllocatedBitCell<F>,
@@ -110,11 +110,11 @@ pub(crate) struct AllocatedU64CellWithFlagBitDynSign<F: FieldExt> {
 macro_rules! define_cell {
     ($x: ident, $limit: expr) => {
         #[derive(Debug, Clone, Copy)]
-        pub(crate) struct $x<F: FieldExt> {
+        pub(crate) struct $x<F: PrimeField> {
             pub(crate) cell: AllocatedCell<F>,
         }
 
-        impl<F: FieldExt> CellExpression<F> for $x<F> {
+        impl<F: PrimeField> CellExpression<F> for $x<F> {
             fn curr_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
                 self.cell.curr_expr(meta)
             }
@@ -136,11 +136,11 @@ define_cell!(AllocatedU16Cell, F::from(u16::MAX as u64));
 define_cell!(AllocatedUnlimitedCell, -F::one());
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedCommonRangeCell<F: FieldExt> {
+pub(crate) struct AllocatedCommonRangeCell<F: PrimeField> {
     pub(crate) cell: AllocatedCell<F>,
 }
 
-impl<F: FieldExt> CellExpression<F> for AllocatedCommonRangeCell<F> {
+impl<F: PrimeField> CellExpression<F> for AllocatedCommonRangeCell<F> {
     fn curr_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         self.cell.curr_expr(meta)
     }
@@ -150,7 +150,7 @@ impl<F: FieldExt> CellExpression<F> for AllocatedCommonRangeCell<F> {
     }
 }
 
-impl<F: FieldExt> AllocatedU32Cell<F> {
+impl<F: PrimeField> AllocatedU32Cell<F> {
     pub(crate) fn expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         self.u16_cells_le[0].curr_expr(meta)
             + (self.u16_cells_le[1].curr_expr(meta) * constant_from!(1 << 16))
@@ -170,7 +170,7 @@ impl<F: FieldExt> AllocatedU32Cell<F> {
 }
 
 #[allow(dead_code)]
-impl<F: FieldExt> AllocatedU32PermutationCell<F> {
+impl<F: PrimeField> AllocatedU32PermutationCell<F> {
     pub(crate) fn expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         self.curr_expr(meta)
     }
@@ -199,7 +199,7 @@ impl<F: FieldExt> AllocatedU32PermutationCell<F> {
     }
 }
 
-impl<F: FieldExt> AllocatedU64Cell<F> {
+impl<F: PrimeField> AllocatedU64Cell<F> {
     pub(crate) fn assign(&self, ctx: &mut Context<'_, F>, value: u64) -> Result<(), Error> {
         for i in 0..4 {
             self.u16_cells_le[i].assign(ctx, ((value >> (i * 16)) & 0xffffu64).into())?;
@@ -209,7 +209,7 @@ impl<F: FieldExt> AllocatedU64Cell<F> {
     }
 }
 
-impl<F: FieldExt> AllocatedU64CellWithFlagBitDyn<F> {
+impl<F: PrimeField> AllocatedU64CellWithFlagBitDyn<F> {
     pub(crate) fn assign(
         &self,
         ctx: &mut Context<'_, F>,
@@ -234,7 +234,7 @@ impl<F: FieldExt> AllocatedU64CellWithFlagBitDyn<F> {
     }
 }
 
-impl<F: FieldExt> AllocatedU64CellWithFlagBitDynSign<F> {
+impl<F: PrimeField> AllocatedU64CellWithFlagBitDynSign<F> {
     pub(crate) fn assign(
         &self,
         ctx: &mut Context<'_, F>,

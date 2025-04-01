@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::best_multiexp_gpu_cond;
+use halo2_proofs::arithmetic::best_multiexp;
 use halo2_proofs::arithmetic::CurveAffine;
 use halo2_proofs::poly::commitment::Params;
 use specs::CompilationTable;
@@ -6,11 +6,11 @@ use specs::CompilationTable;
 use crate::circuits::utils::image_table::encode_compilation_table_values;
 
 pub trait ImageCheckSum<C: CurveAffine, Output> {
-    fn checksum(&self, k: u32, params: &Params<C>) -> Output;
+    fn checksum<'a>(&self, k: u32, params: &impl Params<'a, C>) -> Output;
 }
 
 impl<C: CurveAffine> ImageCheckSum<C, Vec<C>> for CompilationTable {
-    fn checksum(&self, k: u32, params: &Params<C>) -> Vec<C> {
+    fn checksum<'a>(&self, k: u32, params: &impl Params<'a, C>) -> Vec<C> {
         let cells = encode_compilation_table_values(
             k,
             &self.itable,
@@ -22,7 +22,7 @@ impl<C: CurveAffine> ImageCheckSum<C, Vec<C>> for CompilationTable {
         )
         .plain();
 
-        let c = best_multiexp_gpu_cond(&cells[..], &params.get_g_lagrange()[0..cells.len()]);
+        let c = best_multiexp(&cells[..], &params.get_g_lagrange()[0..cells.len()]);
         vec![c.into()]
     }
 }

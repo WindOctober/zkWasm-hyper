@@ -1,7 +1,7 @@
 use std::ops::Add;
 use std::ops::Mul;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::halo2curves::ff::PrimeField;
 use halo2_proofs::plonk::Expression;
 use num_bigint::BigUint;
 
@@ -30,19 +30,21 @@ impl FromBn for BigUint {
     }
 }
 
-fn bn_to_field<F: FieldExt>(bn: &BigUint) -> F {
+fn bn_to_field<F: PrimeField>(bn: &BigUint) -> F {
     let mut bytes = bn.to_bytes_le();
     bytes.resize(32, 0);
-    let mut bytes = &bytes[..];
-    F::read(&mut bytes).unwrap()
+    let bytes = &bytes[..];
+    let mut repr = F::Repr::default();
+    repr.as_mut().copy_from_slice(bytes);
+    F::from_repr(repr).unwrap()
 }
 
-impl<F: FieldExt> FromBn for Expression<F> {
+impl<F: PrimeField> FromBn for Expression<F> {
     fn from_bn(bn: &BigUint) -> Self {
         halo2_proofs::plonk::Expression::Constant(bn_to_field(bn))
     }
 
     fn zero() -> Self {
-        halo2_proofs::plonk::Expression::Constant(F::zero())
+        halo2_proofs::plonk::Expression::Constant(F::ZERO)
     }
 }

@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
@@ -11,7 +11,7 @@ use crate::instance_prev;
 
 use super::WasmInputHelperTableConfig;
 
-impl<F: FieldExt> WasmInputHelperTableConfig<F> {
+impl<F: PrimeField> WasmInputHelperTableConfig<F> {
     pub fn configure(meta: &mut ConstraintSystem<F>, from_zero_index: Column<Fixed>) -> Self {
         let input = meta.instance_column();
         meta.enable_equality(input);
@@ -24,7 +24,7 @@ impl<F: FieldExt> WasmInputHelperTableConfig<F> {
     }
 }
 
-impl<F: FieldExt> ForeignTableConfig<F> for WasmInputHelperTableConfig<F> {
+impl<F: PrimeField> ForeignTableConfig<F> for WasmInputHelperTableConfig<F> {
     fn configure_in_table(
         &self,
         meta: &mut ConstraintSystem<F>,

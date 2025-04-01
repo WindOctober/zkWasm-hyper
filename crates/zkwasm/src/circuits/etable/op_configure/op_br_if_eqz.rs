@@ -10,7 +10,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -24,7 +24,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct BrIfEqzConfig<F: FieldExt> {
+pub struct BrIfEqzConfig<F: PrimeField> {
     cond_inv_cell: AllocatedUnlimitedCell<F>,
     cond_is_zero_cell: AllocatedBitCell<F>,
     cond_is_not_zero_cell: AllocatedBitCell<F>,
@@ -40,7 +40,7 @@ pub struct BrIfEqzConfig<F: FieldExt> {
 
 pub struct BrIfEqzConfigBuilder;
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BrIfEqzConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for BrIfEqzConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -122,7 +122,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BrIfEqzConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for BrIfEqzConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant!(bn_to_field(
             &(BigUint::from(OpcodeClass::BrIfEqz as u64) << OPCODE_CLASS_SHIFT)
@@ -167,7 +167,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig<F> {
                 if !keep.is_empty() {
                     let keep_type: VarType = keep[0].into();
 
-                    self.keep_cell.assign(ctx, F::one())?;
+                    self.keep_cell.assign(ctx, F::ONE)?;
                     self.is_i32_cell.assign(ctx, F::from(keep_type as u64))?;
                     if *condition == 0 {
                         self.memory_table_lookup_stack_read_return_value.assign(
@@ -198,9 +198,9 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrIfEqzConfig<F> {
                         .assign(ctx, step.field_helper.invert(cond))?;
                 }
                 self.cond_is_zero_cell
-                    .assign(ctx, if cond == 0 { F::one() } else { F::zero() })?;
+                    .assign(ctx, if cond == 0 { F::ONE } else { F::ZERO })?;
                 self.cond_is_not_zero_cell
-                    .assign(ctx, if cond == 0 { F::zero() } else { F::one() })?;
+                    .assign(ctx, if cond == 0 { F::ZERO } else { F::ONE })?;
                 self.dst_pc_cell.assign(ctx, F::from((*dst_pc) as u64))?;
             }
             _ => unreachable!(),

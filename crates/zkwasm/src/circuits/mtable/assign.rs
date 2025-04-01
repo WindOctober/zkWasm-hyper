@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::circuit::Region;
@@ -27,7 +27,7 @@ use crate::circuits::utils::Context;
 
 use super::MEMORY_TABLE_ENTRY_ROWS;
 
-impl<F: FieldExt> MemoryTableChip<F> {
+impl<F: PrimeField> MemoryTableChip<F> {
     fn assign_fixed(&self, ctx: &mut Context<'_, F>) -> Result<(), Error> {
         let capability = self.maximal_available_rows / MEMORY_TABLE_ENTRY_ROWS as usize;
 
@@ -36,7 +36,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 || "mtable: sel",
                 self.config.entry_sel,
                 ctx.offset,
-                || Ok(F::one()),
+                || Ok(F::ONE),
             )?;
 
             if i == capability - 1 {
@@ -44,7 +44,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                     || "rest_mops terminate",
                     self.config.rest_mops_cell.cell.col,
                     ctx.offset + self.config.rest_mops_cell.cell.rot as usize,
-                    F::zero(),
+                    F::ZERO,
                 )?;
             }
 
@@ -55,7 +55,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
             || "rest_mops terminate",
             self.config.rest_mops_cell.cell.col,
             ctx.offset + self.config.rest_mops_cell.cell.rot as usize,
-            F::zero(),
+            F::ZERO,
         )?;
 
         #[cfg(feature = "continuation")]
@@ -63,7 +63,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
             || "rest_memory_finalize_ops terminate",
             self.config.rest_memory_finalize_ops_cell.cell.col,
             ctx.offset + self.config.rest_memory_finalize_ops_cell.cell.rot as usize,
-            F::zero(),
+            F::ZERO,
         )?;
 
         Ok(())
@@ -127,19 +127,19 @@ impl<F: FieldExt> MemoryTableChip<F> {
 
         macro_rules! assign_bit {
             ($ctx:expr, $cell:ident) => {
-                assign_advice!($ctx, $cell, F::one())
+                assign_advice!($ctx, $cell, F::ONE)
             };
         }
 
         macro_rules! assign_bit_if {
             ($ctx:expr, $cond:expr, $cell:ident) => {
                 if $cond {
-                    assign_advice!($ctx, $cell, F::one());
+                    assign_advice!($ctx, $cell, F::ONE);
                 }
             };
         }
 
-        struct Status<F: FieldExt> {
+        struct Status<F: PrimeField> {
             rest_mops: u64,
 
             init_encode: F,
@@ -202,7 +202,7 @@ impl<F: FieldExt> MemoryTableChip<F> {
                 status.push(Status {
                     rest_mops,
 
-                    init_encode: current_address_init_encode.unwrap_or(F::zero()),
+                    init_encode: current_address_init_encode.unwrap_or(F::ZERO),
 
                     is_next_same_ltype_cell,
                     is_next_same_offset_cell,
@@ -293,11 +293,11 @@ impl<F: FieldExt> MemoryTableChip<F> {
                     let offset_diff = F::from(status[index].offset_diff as u64);
                     let offset_diff_inv = invert_cache
                         .entry(status[index].offset_diff as u64)
-                        .or_insert_with(|| offset_diff.invert().unwrap_or(F::zero()));
+                        .or_insert_with(|| offset_diff.invert().unwrap_or(F::ZERO));
                     let offset_diff_inv_helper = if status[index].offset_diff == 0 {
-                        F::zero()
+                        F::ZERO
                     } else {
-                        F::one()
+                        F::ONE
                     };
 
                     assign_bit_if!(

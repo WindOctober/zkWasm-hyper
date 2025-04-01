@@ -1,5 +1,6 @@
 use self::configure::JTableConstraint;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::Field;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
@@ -22,14 +23,14 @@ pub(self) enum FrameTableValueOffset {
 }
 
 #[derive(Clone)]
-pub struct JumpTableConfig<F: FieldExt> {
+pub struct JumpTableConfig<F: PrimeField> {
     sel: Column<Fixed>,
     inherited: Column<Fixed>,
     value: Column<Advice>,
     _m: PhantomData<F>,
 }
 
-impl<F: FieldExt> JumpTableConfig<F> {
+impl<F: PrimeField> JumpTableConfig<F> {
     pub fn configure(meta: &mut ConstraintSystem<F>, is_last_slice: bool) -> Self {
         let jtable = Self::new(meta);
         jtable.configure(meta, is_last_slice);
@@ -37,12 +38,12 @@ impl<F: FieldExt> JumpTableConfig<F> {
     }
 }
 
-pub struct JumpTableChip<F: FieldExt> {
+pub struct JumpTableChip<F: PrimeField> {
     config: JumpTableConfig<F>,
     max_available_rows: usize,
 }
 
-impl<F: FieldExt> JumpTableChip<F> {
+impl<F: PrimeField> JumpTableChip<F> {
     pub fn new(config: JumpTableConfig<F>, max_available_rows: usize) -> Self {
         JumpTableChip {
             config,
@@ -52,7 +53,7 @@ impl<F: FieldExt> JumpTableChip<F> {
 }
 
 #[derive(Debug)]
-pub(crate) struct FrameEtablePermutationCells<F: FieldExt> {
+pub(crate) struct FrameEtablePermutationCells<F: Field> {
     pub(crate) rest_call_ops: AssignedCell<F, F>,
     pub(crate) rest_return_ops: AssignedCell<F, F>,
 }

@@ -11,7 +11,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -22,7 +22,7 @@ use specs::encode::opcode::encode_call_indirect;
 use specs::mtable::LocationType;
 use specs::step::StepInfo;
 
-pub struct CallIndirectConfig<F: FieldExt> {
+pub struct CallIndirectConfig<F: PrimeField> {
     is_returned_cell: AllocatedBitCell<F>,
 
     type_index: AllocatedCommonRangeCell<F>,
@@ -37,7 +37,7 @@ pub struct CallIndirectConfig<F: FieldExt> {
 
 pub struct CallIndirectConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for CallIndirectConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for CallIndirectConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -120,7 +120,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for CallIndirectConfigBuilder
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for CallIndirectConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for CallIndirectConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_call_indirect(self.type_index.expr(meta))
     }
@@ -193,7 +193,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for CallIndirectConfig<F> {
     }
 
     fn sp_diff(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
-        Some(constant!(F::one()))
+        Some(constant!(F::ONE))
     }
 
     fn call_ops_expr(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {

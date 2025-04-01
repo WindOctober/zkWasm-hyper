@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -25,7 +25,7 @@ use crate::constant_from_bn;
 use crate::foreign::EventTableForeignCallConfigBuilder;
 use crate::foreign::InternalHostPluginBuilder;
 
-pub struct ETableRequireHelperTableConfig<F: FieldExt> {
+pub struct ETableRequireHelperTableConfig<F: PrimeField> {
     plugin_index: usize,
 
     cond: AllocatedU64Cell<F>,
@@ -44,7 +44,7 @@ impl InternalHostPluginBuilder for ETableRequireHelperTableConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableForeignCallConfigBuilder<F> for ETableRequireHelperTableConfigBuilder {
+impl<F: PrimeField> EventTableForeignCallConfigBuilder<F> for ETableRequireHelperTableConfigBuilder {
     fn configure(
         self,
         common_config: &EventTableCommonConfig<F>,
@@ -83,7 +83,7 @@ impl<F: FieldExt> EventTableForeignCallConfigBuilder<F> for ETableRequireHelperT
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableRequireHelperTableConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ETableRequireHelperTableConfig<F> {
     fn opcode(&self, _meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant_from_bn!(
             &(BigUint::from(OpcodeClass::ForeignPluginStart as u64 + self.plugin_index as u64)

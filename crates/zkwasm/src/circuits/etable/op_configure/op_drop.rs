@@ -9,7 +9,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant_from;
 use crate::constant_from_bn;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -22,7 +22,7 @@ pub struct DropConfig;
 
 pub struct DropConfigBuilder;
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for DropConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for DropConfigBuilder {
     fn configure(
         _: &EventTableCommonConfig<F>,
         _: &mut EventTableCellAllocator<F>,
@@ -32,7 +32,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for DropConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for DropConfig {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for DropConfig {
     fn opcode(&self, _: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant_from_bn!(&(BigUint::from(OpcodeClass::Drop as u64) << OPCODE_CLASS_SHIFT))
     }

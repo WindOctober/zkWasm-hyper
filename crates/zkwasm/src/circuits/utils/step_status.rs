@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use specs::configure_table::ConfigureTable;
 use specs::itable::InstructionTable;
 
@@ -26,18 +26,18 @@ pub struct Status<'a> {
 }
 
 #[derive(Default)]
-pub struct FieldHelper<F: FieldExt>(HashMap<u64, F>);
+pub struct FieldHelper<F: PrimeField>(HashMap<u64, F>);
 
-impl<F: FieldExt> FieldHelper<F> {
+impl<F: PrimeField> FieldHelper<F> {
     pub fn invert(&mut self, value: u64) -> F {
         *self
             .0
             .entry(value)
-            .or_insert_with(|| F::from(value).invert().unwrap_or(F::zero()))
+            .or_insert_with(|| F::from(value).invert().unwrap_or(F::ZERO))
     }
 }
 
-pub struct StepStatus<'a, 'b, 'c, 'd, F: FieldExt> {
+pub struct StepStatus<'a, 'b, 'c, 'd, F: PrimeField> {
     pub current: &'a Status<'b>,
     pub next: &'a Status<'b>,
     pub configure_table: &'b ConfigureTable,

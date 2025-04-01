@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 #[cfg(feature = "uniform-circuit")]
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
@@ -41,7 +41,7 @@ pub fn compute_maximal_pages(k: u32) -> u32 {
 
 #[allow(dead_code)]
 #[derive(Clone)]
-pub struct ImageTableConfig<F: FieldExt> {
+pub struct ImageTableConfig<F: PrimeField> {
     memory_addr_sel: Option<Column<Fixed>>,
     #[cfg(feature = "uniform-circuit")]
     col: Column<Advice>,
@@ -50,7 +50,7 @@ pub struct ImageTableConfig<F: FieldExt> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> ImageTableConfig<F> {
+impl<F: PrimeField> ImageTableConfig<F> {
     pub(crate) fn expr(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
         cfg_if::cfg_if! {
             if #[cfg(feature="uniform-circuit")] {
@@ -63,11 +63,11 @@ impl<F: FieldExt> ImageTableConfig<F> {
 }
 
 #[derive(Clone)]
-pub struct ImageTableChip<F: FieldExt> {
+pub struct ImageTableChip<F: PrimeField> {
     config: ImageTableConfig<F>,
 }
 
-impl<F: FieldExt> ImageTableChip<F> {
+impl<F: PrimeField> ImageTableChip<F> {
     pub fn new(config: ImageTableConfig<F>) -> Self {
         ImageTableChip { config }
     }

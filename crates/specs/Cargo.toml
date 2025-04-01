@@ -20,8 +20,8 @@ num-traits.workspace = true
 parity-wasm.workspace = true
 rayon.workspace = true
 static_assertions.workspace = true
+pairing = { git = "https://github.com/lanbones/pairing", package = "pairing_bn256"}
 
 [features]
 default = []
-cuda = ["halo2_proofs/cuda"]
 continuation = []

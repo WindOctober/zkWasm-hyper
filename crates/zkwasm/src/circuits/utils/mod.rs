@@ -1,5 +1,5 @@
-use halo2_proofs::arithmetic::BaseExt;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::Field;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::Region;
 use num_bigint::BigUint;
 
@@ -13,16 +13,17 @@ pub mod u8;
 
 pub mod table_entry;
 
-pub struct Context<'a, F: FieldExt> {
+pub struct Context<'a, F: PrimeField> {
     pub region: Box<Region<'a, F>>,
     pub offset: usize,
     records: Vec<usize>,
 }
 
-impl<'a, F: FieldExt> Context<'a, F> {
+impl<'a, F: PrimeField> Context<'a, F> {
     pub fn new(region: &Region<'a, F>) -> Self {
+        let region = region.clone();
         Self {
-            region: Box::new(region.clone()),
+            region: Box::new(region),
             offset: 0usize,
             records: vec![],
         }
@@ -50,13 +51,14 @@ impl<'a, F: FieldExt> Context<'a, F> {
     }
 }
 
-pub fn field_to_bn<F: BaseExt>(f: &F) -> BigUint {
+// TODO: ignore ConstantEq is legal?
+pub fn field_to_bn<F: Field>(f: &F) -> BigUint {
     let mut bytes: Vec<u8> = Vec::new();
     f.write(&mut bytes).unwrap();
     BigUint::from_bytes_le(&bytes[..])
 }
 
-pub fn bn_to_field<F: BaseExt>(bn: &BigUint) -> F {
+pub fn bn_to_field<F: Field>(bn: &BigUint) -> F {
     let mut bytes = bn.to_bytes_le();
     bytes.resize(32, 0);
     let mut bytes = &bytes[..];

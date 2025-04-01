@@ -5,7 +5,7 @@ use super::rtable::RangeTableConfig;
 use super::traits::ConfigureLookupTable;
 use crate::constant_from;
 use crate::fixed_curr;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -29,7 +29,7 @@ type AllocatedU32StateCell<F> = AllocatedU32Cell<F>;
 type AllocatedU32StateCell<F> = AllocatedCommonRangeCell<F>;
 
 #[derive(Clone)]
-pub struct MemoryTableConfig<F: FieldExt> {
+pub struct MemoryTableConfig<F: PrimeField> {
     entry_sel: Column<Fixed>,
 
     enabled_cell: AllocatedBitCell<F>,
@@ -66,7 +66,7 @@ pub struct MemoryTableConfig<F: FieldExt> {
     value: AllocatedU64Cell<F>,
 }
 
-impl<F: FieldExt> MemoryTableConfig<F> {
+impl<F: PrimeField> MemoryTableConfig<F> {
     pub(crate) fn configure(
         meta: &mut ConstraintSystem<F>,
         (l_0, l_active, l_active_last): (Column<Fixed>, Column<Fixed>, Column<Fixed>),
@@ -412,7 +412,7 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 }
 
-impl<F: FieldExt> ConfigureLookupTable<F> for MemoryTableConfig<F> {
+impl<F: PrimeField> ConfigureLookupTable<F> for MemoryTableConfig<F> {
     fn configure_in_table(
         &self,
         meta: &mut ConstraintSystem<F>,
@@ -445,7 +445,7 @@ impl<F: FieldExt> ConfigureLookupTable<F> for MemoryTableConfig<F> {
 }
 
 #[cfg(feature = "continuation")]
-impl<F: FieldExt> MemoryTableConfig<F> {
+impl<F: PrimeField> MemoryTableConfig<F> {
     pub(in crate::circuits) fn configure_in_post_init_memory_table(
         &self,
         meta: &mut ConstraintSystem<F>,
@@ -465,12 +465,12 @@ impl<F: FieldExt> MemoryTableConfig<F> {
     }
 }
 
-pub(super) struct MemoryTableChip<F: FieldExt> {
+pub(super) struct MemoryTableChip<F: PrimeField> {
     config: MemoryTableConfig<F>,
     maximal_available_rows: usize,
 }
 
-impl<F: FieldExt> MemoryTableChip<F> {
+impl<F: PrimeField> MemoryTableChip<F> {
     pub(super) fn new(config: MemoryTableConfig<F>, maximal_available_rows: usize) -> Self {
         Self {
             config,

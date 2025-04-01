@@ -10,7 +10,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -25,7 +25,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct RelConfig<F: FieldExt> {
+pub struct RelConfig<F: PrimeField> {
     is_i32: AllocatedBitCell<F>,
 
     lhs: AllocatedU64CellWithFlagBitDynSign<F>,
@@ -60,7 +60,7 @@ pub struct RelConfig<F: FieldExt> {
 
 pub struct RelConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for RelConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for RelConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -239,7 +239,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for RelConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for RelConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         let subop_eq = |meta: &mut VirtualCells<F>| {
             self.op_is_eq.expr(meta)
@@ -369,7 +369,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig<F> {
         };
 
         if var_type == VarType::I32 {
-            self.is_i32.assign(ctx, F::one())?;
+            self.is_i32.assign(ctx, F::ONE)?;
         }
 
         let op_is_sign = vec![
@@ -381,7 +381,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig<F> {
         .contains(&class);
 
         if op_is_sign {
-            self.op_is_sign.assign(ctx, F::one())?;
+            self.op_is_sign.assign(ctx, F::ONE)?;
         }
 
         {
@@ -421,39 +421,38 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig<F> {
             self.res_is_gt.assign_bool(ctx, lhs > rhs)?;
             self.res_is_lt.assign_bool(ctx, lhs < rhs)?;
         }
-        self.res
-            .assign(ctx, if value { F::one() } else { F::zero() })?;
+        self.res.assign(ctx, if value { F::ONE } else { F::ZERO })?;
 
         match class {
             RelOp::Eq => {
-                self.op_is_eq.assign(ctx, F::one())?;
+                self.op_is_eq.assign(ctx, F::ONE)?;
             }
             RelOp::Ne => {
-                self.op_is_ne.assign(ctx, F::one())?;
+                self.op_is_ne.assign(ctx, F::ONE)?;
             }
             RelOp::SignedGt => {
-                self.op_is_gt.assign(ctx, F::one())?;
+                self.op_is_gt.assign(ctx, F::ONE)?;
             }
             RelOp::UnsignedGt => {
-                self.op_is_gt.assign(ctx, F::one())?;
+                self.op_is_gt.assign(ctx, F::ONE)?;
             }
             RelOp::SignedGe => {
-                self.op_is_ge.assign(ctx, F::one())?;
+                self.op_is_ge.assign(ctx, F::ONE)?;
             }
             RelOp::UnsignedGe => {
-                self.op_is_ge.assign(ctx, F::one())?;
+                self.op_is_ge.assign(ctx, F::ONE)?;
             }
             RelOp::SignedLt => {
-                self.op_is_lt.assign(ctx, F::one())?;
+                self.op_is_lt.assign(ctx, F::ONE)?;
             }
             RelOp::UnsignedLt => {
-                self.op_is_lt.assign(ctx, F::one())?;
+                self.op_is_lt.assign(ctx, F::ONE)?;
             }
             RelOp::SignedLe => {
-                self.op_is_le.assign(ctx, F::one())?;
+                self.op_is_le.assign(ctx, F::ONE)?;
             }
             RelOp::UnsignedLe => {
-                self.op_is_le.assign(ctx, F::one())?;
+                self.op_is_le.assign(ctx, F::ONE)?;
             }
         };
 
@@ -501,6 +500,6 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for RelConfig<F> {
     }
 
     fn sp_diff(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
-        Some(constant!(F::one()))
+        Some(constant!(F::ONE))
     }
 }

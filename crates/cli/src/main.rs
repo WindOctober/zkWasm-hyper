@@ -54,43 +54,8 @@ fn main() -> Result<()> {
     let cli: ZkWasmCli = app.get_matches().into();
 
     match cli.subcommand {
-        Subcommands::Setup(arg) => {
-            let env_builder: Box<dyn HostEnvBuilder> = match arg.host_mode {
-                HostMode::Default => Box::new(DefaultHostEnvBuilder::new(arg.k)),
-                HostMode::Standard => unimplemented!(),
-            };
-
-            arg.setup(&*env_builder, &cli.name, &cli.params_dir)?;
-        }
-        Subcommands::DryRun(arg) => {
-            let config = Config::read(&mut fs::File::open(
-                cli.params_dir.join(name_of_config(&cli.name)),
-            )?)?;
-
-            let public_inputs = parse_args(&arg.running_arg.public_inputs);
-            let private_inputs = parse_args(&arg.running_arg.private_inputs);
-            let context_inputs = parse_args(&arg.running_arg.context_inputs);
-
-            let env_builder: Box<dyn HostEnvBuilder> = match config.host_mode {
-                HostMode::Default => Box::new(DefaultHostEnvBuilder::new(config.k)),
-                HostMode::Standard => unimplemented!(),
-            };
-
-            config.dry_run(
-                &*env_builder,
-                &arg.wasm_image,
-                &arg.running_arg.output_dir,
-                ExecutionArg {
-                    public_inputs,
-                    private_inputs,
-                    context_inputs,
-                    indexed_witness: Rc::new(RefCell::new(HashMap::default())),
-                    // tree_db: Some(Rc::new(RefCell::new(MongoDB::new([0; 32], None)))),
-                },
-                arg.running_arg.context_output,
-                arg.instruction_limit,
-            )?;
-        }
+        Subcommands::Setup(_) => unimplemented!(),
+        Subcommands::DryRun(_) => unimplemented!(),
         Subcommands::Prove(arg) => {
             let trace_dir = arg.output_dir.join("traces");
             fs::create_dir_all(&trace_dir)?;
@@ -111,7 +76,7 @@ fn main() -> Result<()> {
             if arg.file_backend {
                 let backend_builder = FileBackendBuilder::new(cli.name.clone(), trace_dir);
 
-                config.prove(
+                config.hyperplonk(
                     backend_builder,
                     &*env_builder,
                     &arg.wasm_image,
@@ -132,7 +97,7 @@ fn main() -> Result<()> {
             } else {
                 let backend_builder = InMemoryBackendBuilder;
 
-                config.prove(
+                config.hyperplonk(
                     backend_builder,
                     &*env_builder,
                     &arg.wasm_image,
@@ -152,13 +117,7 @@ fn main() -> Result<()> {
                 )?;
             }
         }
-        Subcommands::Verify(arg) => {
-            let config = Config::read(&mut fs::File::open(
-                cli.params_dir.join(name_of_config(&cli.name)),
-            )?)?;
-
-            config.verify(&cli.params_dir, &arg.output_dir)?;
-        }
+        Subcommands::Verify(_) => unimplemented!(),
     }
 
     Ok(())

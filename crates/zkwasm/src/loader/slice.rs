@@ -1,4 +1,5 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
+use halo2_proofs::halo2curves::ff::FromUniformBytes;
 use specs::brtable::BrTable;
 use specs::brtable::ElemTable;
 use specs::configure_table::ConfigureTable;
@@ -23,7 +24,7 @@ use crate::error::BuildingCircuitError;
 use crate::runtime::state::UpdateInitMemoryTable;
 use crate::runtime::state::UpdateInitializationState;
 
-pub struct Slices<F: FieldExt, B: SliceBackend> {
+pub struct Slices<F: PrimeField, B: SliceBackend> {
     k: u32,
 
     // The number of trivial circuits left.
@@ -45,7 +46,7 @@ pub struct Slices<F: FieldExt, B: SliceBackend> {
     _marker: std::marker::PhantomData<F>,
 }
 
-impl<F: FieldExt, B: SliceBackend> Slices<F, B> {
+impl<F: PrimeField + FromUniformBytes<64> + Ord, B: SliceBackend> Slices<F, B> {
     /*
      * padding: Insert trivial slices so that the number of proofs is at least padding.
      */
@@ -91,11 +92,11 @@ impl<F: FieldExt, B: SliceBackend> Slices<F, B> {
         for slice in self.into_iter() {
             match slice {
                 ZkWasmCircuit::Ongoing(circuit) => {
-                    let prover = MockProver::run(k, &circuit, vec![instances.clone()])?;
+                    let prover = MockProver::run::<_, true>(k, &circuit, vec![instances.clone()])?;
                     assert_eq!(prover.verify(), Ok(()));
                 }
                 ZkWasmCircuit::LastSliceCircuit(circuit) => {
-                    let prover = MockProver::run(k, &circuit, vec![instances.clone()])?;
+                    let prover = MockProver::run::<_, true>(k, &circuit, vec![instances.clone()])?;
                     assert_eq!(prover.verify(), Ok(()));
                 }
             }
@@ -126,7 +127,7 @@ impl<B: SliceBackend> Iterator for SlicesIter<B> {
     }
 }
 
-pub struct ZkWasmCircuitIter<F: FieldExt, B: SliceBackend> {
+pub struct ZkWasmCircuitIter<F: PrimeField, B: SliceBackend> {
     // immutable parts
     k: u32,
     itable: Arc<InstructionTable>,
@@ -147,7 +148,7 @@ pub struct ZkWasmCircuitIter<F: FieldExt, B: SliceBackend> {
     mark: PhantomData<F>,
 }
 
-impl<F: FieldExt, B: SliceBackend> IntoIterator for Slices<F, B> {
+impl<F: PrimeField, B: SliceBackend> IntoIterator for Slices<F, B> {
     type Item = ZkWasmCircuit<F>;
 
     type IntoIter = ZkWasmCircuitIter<F, B>;
@@ -171,7 +172,7 @@ impl<F: FieldExt, B: SliceBackend> IntoIterator for Slices<F, B> {
     }
 }
 
-impl<F: FieldExt, B: SliceBackend> ZkWasmCircuitIter<F, B> {
+impl<F: PrimeField, B: SliceBackend> ZkWasmCircuitIter<F, B> {
     // create a circuit slice with all entries disabled.
     fn trivial_slice(&mut self) -> ZkWasmCircuit<F> {
         self.padding -= 1;
@@ -209,7 +210,7 @@ impl<F: FieldExt, B: SliceBackend> ZkWasmCircuitIter<F, B> {
     }
 }
 
-impl<F: FieldExt, B: SliceBackend> Iterator for ZkWasmCircuitIter<F, B> {
+impl<F: PrimeField, B: SliceBackend> Iterator for ZkWasmCircuitIter<F, B> {
     type Item = ZkWasmCircuit<F>;
 
     fn next(&mut self) -> Option<Self::Item> {

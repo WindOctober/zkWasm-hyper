@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::marker::PhantomData;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::plonk::Column;
@@ -18,11 +18,11 @@ use crate::circuits::utils::image_table::ImageTableLayouter;
 use super::jtable::JumpTableConfig;
 
 #[derive(Clone)]
-pub(in crate::circuits) struct PostImageTableConfig<F: FieldExt> {
+pub(in crate::circuits) struct PostImageTableConfig<F: PrimeField> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> PostImageTableConfig<F> {
+impl<F: PrimeField> PostImageTableConfig<F> {
     pub(in crate::circuits) fn configure(
         _meta: &mut ConstraintSystem<F>,
         _memory_addr_sel: Option<Column<Fixed>>,
@@ -34,11 +34,11 @@ impl<F: FieldExt> PostImageTableConfig<F> {
     }
 }
 
-pub(in crate::circuits) struct PostImageTableChip<F: FieldExt> {
+pub(in crate::circuits) struct PostImageTableChip<F: PrimeField> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> PostImageTableChip<F> {
+impl<F: PrimeField> PostImageTableChip<F> {
     pub(in crate::circuits) fn new(_config: PostImageTableConfig<F>) -> Self {
         Self { _mark: PhantomData }
     }

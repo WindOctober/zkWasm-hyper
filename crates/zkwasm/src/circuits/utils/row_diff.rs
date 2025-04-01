@@ -2,7 +2,7 @@ use super::Context;
 use crate::constant_from;
 use crate::curr;
 use crate::nextn;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -12,7 +12,7 @@ use halo2_proofs::plonk::VirtualCells;
 use std::marker::PhantomData;
 
 #[derive(Clone)]
-pub struct RowDiffConfig<F: FieldExt> {
+pub struct RowDiffConfig<F: PrimeField> {
     pub data: Column<Advice>,
     pub same: Column<Advice>,
     pub inv: Column<Advice>,
@@ -20,7 +20,7 @@ pub struct RowDiffConfig<F: FieldExt> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> RowDiffConfig<F> {
+impl<F: PrimeField> RowDiffConfig<F> {
     pub fn configure(
         key: &'static str,
         meta: &mut ConstraintSystem<F>,
@@ -77,7 +77,7 @@ impl<F: FieldExt> RowDiffConfig<F> {
             || "row diff inv",
             self.inv,
             offset,
-            || Ok(diff.invert().unwrap_or(F::zero())),
+            || Ok(diff.invert().unwrap_or(F::ZERO)),
         )?;
 
         if offset < self.distance as usize {
@@ -85,7 +85,7 @@ impl<F: FieldExt> RowDiffConfig<F> {
                 || "row diff same",
                 self.same,
                 offset,
-                F::zero(),
+                F::ZERO,
             )?;
         } else {
             ctx.region.assign_advice(
@@ -94,9 +94,9 @@ impl<F: FieldExt> RowDiffConfig<F> {
                 offset,
                 || {
                     Ok(if diff.is_zero().into() {
-                        F::one()
+                        F::ONE
                     } else {
-                        F::zero()
+                        F::ZERO
                     })
                 },
             )?;

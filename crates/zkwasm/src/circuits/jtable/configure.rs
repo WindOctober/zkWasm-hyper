@@ -1,11 +1,11 @@
 use super::JumpTableConfig;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
 
-pub trait JTableConstraint<F: FieldExt> {
+pub trait JTableConstraint<F: PrimeField> {
     fn configure(&self, meta: &mut ConstraintSystem<F>, is_last_slice: bool) {
         self.enable_returned_are_bit(meta);
         self.enable_permutation(meta);
@@ -21,7 +21,7 @@ pub trait JTableConstraint<F: FieldExt> {
     fn disabled_block_has_no_entry_value(&self, meta: &mut ConstraintSystem<F>);
 }
 
-impl<F: FieldExt> JTableConstraint<F> for JumpTableConfig<F> {
+impl<F: PrimeField> JTableConstraint<F> for JumpTableConfig<F> {
     fn enable_permutation(&self, meta: &mut ConstraintSystem<F>) {
         meta.enable_equality(self.value);
     }
@@ -87,7 +87,7 @@ impl<F: FieldExt> JTableConstraint<F> for JumpTableConfig<F> {
     }
 }
 
-impl<F: FieldExt> JumpTableConfig<F> {
+impl<F: PrimeField> JumpTableConfig<F> {
     /// Frame Table Constraint 4. Etable step's call/return record can be found on jtable_entry
     pub(in crate::circuits) fn configure_lookup_in_frame_table(
         &self,
@@ -107,7 +107,7 @@ impl<F: FieldExt> JumpTableConfig<F> {
     }
 }
 
-impl<F: FieldExt> JumpTableConfig<F> {
+impl<F: PrimeField> JumpTableConfig<F> {
     pub(super) fn new(meta: &mut ConstraintSystem<F>) -> Self {
         JumpTableConfig {
             sel: meta.fixed_column(),

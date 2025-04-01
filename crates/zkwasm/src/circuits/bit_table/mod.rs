@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -42,7 +42,7 @@ impl BitTableOp {
 
 /// A table to support bit operations('and'/'or'/'xor') and unary operation('popcnt').
 #[derive(Clone)]
-pub struct BitTableConfig<F: FieldExt> {
+pub struct BitTableConfig<F: PrimeField> {
     block_sel: Column<Fixed>,
     u32_sel: Column<Fixed>,
     lookup_sel: Column<Fixed>,
@@ -86,7 +86,7 @@ pub(self) const U8_OFFSET: [usize; 8] = [2, 3, 4, 5, 7, 8, 9, 10];
  * |     0     |    0    |     1      |   x  |            |   l_u8[3]   |   r_u8[3]   |  res_u8[3]  |
  * +-----------+---------|------------+------+------------|-------------+-------------+-------------+
  */
-impl<F: FieldExt> BitTableConfig<F> {
+impl<F: PrimeField> BitTableConfig<F> {
     /*
      * Constraints:
      * ------------------------------------------------------------------------------------------------
@@ -252,12 +252,12 @@ impl<F: FieldExt> BitTableConfig<F> {
     }
 }
 
-pub struct BitTableChip<F: FieldExt> {
+pub struct BitTableChip<F: PrimeField> {
     config: BitTableConfig<F>,
     max_available_rows: usize,
 }
 
-impl<F: FieldExt> BitTableChip<F> {
+impl<F: PrimeField> BitTableChip<F> {
     pub fn new(config: BitTableConfig<F>, max_available_rows: usize) -> Self {
         BitTableChip {
             config,

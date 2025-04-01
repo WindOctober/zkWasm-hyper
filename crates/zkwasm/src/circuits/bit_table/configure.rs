@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -8,7 +8,7 @@ use crate::prev;
 
 use super::BitTableConfig;
 
-impl<F: FieldExt> BitTableConfig<F> {
+impl<F: PrimeField> BitTableConfig<F> {
     pub(crate) fn configure_in_table(
         &self,
         meta: &mut ConstraintSystem<F>,

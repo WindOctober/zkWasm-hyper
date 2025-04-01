@@ -4,8 +4,10 @@ use std::sync::Mutex;
 
 use ark_std::end_timer;
 use ark_std::start_timer;
-use halo2_proofs::arithmetic::FieldExt;
-use halo2_proofs::circuit::floor_planner::FlatFloorPlanner;
+use halo2_proofs::arithmetic::Field;
+use halo2_proofs::arithmetic::PrimeField;
+// TODO: Refactor Flatfloorplanner.
+use halo2_proofs::circuit::floor_planner::V1;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::plonk::Circuit;
@@ -69,7 +71,7 @@ pub const VAR_COLUMNS: usize = 40;
 pub(crate) const RESERVE_ROWS: usize = 128 + (1 << 15);
 
 #[derive(Default, Clone)]
-struct AssignedCells<F: FieldExt> {
+struct AssignedCells<F: Field> {
     pre_image_table_cells: Arc<Mutex<Option<ImageTableLayouter<AssignedCell<F, F>>>>>,
     post_image_table_cells:
         Arc<Mutex<Option<Option<(ImageTableLayouter<AssignedCell<F, F>>, AssignedCell<F, F>)>>>>,
@@ -82,7 +84,7 @@ struct AssignedCells<F: FieldExt> {
 }
 
 #[derive(Clone)]
-pub struct ZkWasmCircuitConfig<F: FieldExt> {
+pub struct ZkWasmCircuitConfig<F: PrimeField> {
     shuffle_range_check_helper: (Column<Fixed>, Column<Fixed>, Column<Fixed>),
     rtable: RangeTableConfig<F>,
     image_table: ImageTableConfig<F>,
@@ -101,10 +103,10 @@ pub struct ZkWasmCircuitConfig<F: FieldExt> {
 
 macro_rules! impl_zkwasm_circuit {
     ($name:ident, $last_slice:expr) => {
-        impl<F: FieldExt> Circuit<F> for $name<F> {
+        impl<F: PrimeField> Circuit<F> for $name<F> {
             type Config = ZkWasmCircuitConfig<F>;
 
-            type FloorPlanner = FlatFloorPlanner;
+            type FloorPlanner = V1;
 
             fn without_witnesses(&self) -> Self {
                 $name::new(
@@ -312,7 +314,7 @@ macro_rules! impl_zkwasm_circuit {
                                     || "range check sel helper",
                                     |region| {
                                         region
-                                            .assign_fixed(|| "l_0", l_0, 0, || Ok(F::one()))
+                                            .assign_fixed(|| "l_0", l_0, 0, || Ok(F::ONE))
                                             .unwrap();
 
                                         region
@@ -320,7 +322,7 @@ macro_rules! impl_zkwasm_circuit {
                                                 || "l_active_last",
                                                 l_active_last,
                                                 l_last - 1,
-                                                || Ok(F::one()),
+                                                || Ok(F::ONE),
                                             )
                                             .unwrap();
 
@@ -330,7 +332,7 @@ macro_rules! impl_zkwasm_circuit {
                                                     || "l_active_last",
                                                     l_active,
                                                     offset,
-                                                    || Ok(F::one()),
+                                                    || Ok(F::ONE),
                                                 )
                                                 .unwrap();
                                         }

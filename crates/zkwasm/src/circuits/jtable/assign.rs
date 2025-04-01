@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::plonk::Error;
@@ -14,7 +14,7 @@ use crate::circuits::jtable::FrameTableValueOffset;
 use crate::circuits::utils::bn_to_field;
 use crate::circuits::utils::Context;
 
-impl<F: FieldExt> JumpTableChip<F> {
+impl<F: PrimeField> JumpTableChip<F> {
     /// Frame Table Constraint 1. The etable and frame table: must have the same jops count."
     fn assign_first_rest_jops(
         &self,
@@ -56,7 +56,7 @@ impl<F: FieldExt> JumpTableChip<F> {
                 || "frame table: sel",
                 self.config.sel,
                 ctx.offset,
-                || Ok(F::one()),
+                || Ok(F::ONE),
             )?;
 
             if i < INHERITED_FRAME_TABLE_ENTRIES {
@@ -64,7 +64,7 @@ impl<F: FieldExt> JumpTableChip<F> {
                     || "frame table: inherited",
                     self.config.inherited,
                     ctx.offset,
-                    || Ok(F::one()),
+                    || Ok(F::ONE),
                 )?;
             }
 
@@ -75,56 +75,56 @@ impl<F: FieldExt> JumpTableChip<F> {
             || "frame table: entry terminate",
             self.config.value,
             ctx.offset + FrameTableValueOffset::CallOps as usize,
-            F::zero(),
+            F::ZERO,
         )?;
 
         ctx.region.assign_advice_from_constant(
             || "frame table: entry terminate",
             self.config.value,
             ctx.offset + FrameTableValueOffset::ReturnOps as usize,
-            F::zero(),
+            F::ZERO,
         )?;
 
         ctx.region.assign_fixed(
             || "frame table: inherited",
             self.config.inherited,
             ctx.offset,
-            || Ok(F::zero()),
+            || Ok(F::ZERO),
         )?;
 
         ctx.region.assign_advice(
             || "frame table: disabled row",
             self.config.value,
             ctx.offset + FrameTableValueOffset::Enable as usize,
-            || Ok(F::zero()),
+            || Ok(F::ZERO),
         )?;
 
         ctx.region.assign_advice(
             || "frame table: disabled row",
             self.config.value,
             ctx.offset + FrameTableValueOffset::Returned as usize,
-            || Ok(F::zero()),
+            || Ok(F::ZERO),
         )?;
 
         ctx.region.assign_advice(
             || "frame table: disabled row",
             self.config.value,
             ctx.offset + FrameTableValueOffset::Encode as usize,
-            || Ok(F::zero()),
+            || Ok(F::ZERO),
         )?;
 
         ctx.region.assign_advice(
             || "frame table: disabled row",
             self.config.value,
             ctx.offset + FrameTableValueOffset::CallOps as usize,
-            || Ok(F::zero()),
+            || Ok(F::ZERO),
         )?;
 
         ctx.region.assign_advice(
             || "frame table: disabled row",
             self.config.value,
             ctx.offset + FrameTableValueOffset::ReturnOps as usize,
-            || Ok(F::zero()),
+            || Ok(F::ZERO),
         )?;
 
         Ok(())
@@ -166,7 +166,7 @@ impl<F: FieldExt> JumpTableChip<F> {
                     || "frame table: enable",
                     self.config.value,
                     ctx.offset + FrameTableValueOffset::Enable as usize,
-                    || Ok(F::one()),
+                    || Ok(F::ONE),
                 )?;
 
                 if entry.returned {
@@ -174,7 +174,7 @@ impl<F: FieldExt> JumpTableChip<F> {
                         || "frame table: returned",
                         self.config.value,
                         ctx.offset + FrameTableValueOffset::Returned as usize,
-                        || Ok(F::one()),
+                        || Ok(F::ONE),
                     )?;
 
                     *rest_return_ops -= 1;
@@ -206,7 +206,7 @@ impl<F: FieldExt> JumpTableChip<F> {
                 || "frame table: enable",
                 self.config.value,
                 ctx.offset + FrameTableValueOffset::Enable as usize,
-                || Ok(F::one()),
+                || Ok(F::ONE),
             )?;
 
             ctx.region.assign_advice(
@@ -235,7 +235,7 @@ impl<F: FieldExt> JumpTableChip<F> {
                     || "frame table: returned",
                     self.config.value,
                     ctx.offset + FrameTableValueOffset::Returned as usize,
-                    || Ok(F::one()),
+                    || Ok(F::ONE),
                 )?;
 
                 *rest_return_ops -= 1u32;

@@ -1,7 +1,7 @@
 use crate::circuits::utils::Context;
 use crate::error::BuildingCircuitError;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::dev::MockProver;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
@@ -45,13 +45,13 @@ pub(crate) fn compute_slice_capability(k: u32) -> u32 {
     ((1 << k) - RESERVE_ROWS as u32 - 1024) / EVENT_TABLE_ENTRY_ROWS as u32
 }
 
-pub struct OngoingCircuit<F: FieldExt> {
+pub struct OngoingCircuit<F: PrimeField> {
     pub k: u32,
     pub slice: Slice,
     _data: PhantomData<F>,
 }
 
-impl<F: FieldExt> OngoingCircuit<F> {
+impl<F: PrimeField> OngoingCircuit<F> {
     pub fn new(k: u32, slice: Slice) -> Result<Self, BuildingCircuitError> {
         {
             // entries is empty when called by without_witness
@@ -93,13 +93,13 @@ impl<F: FieldExt> OngoingCircuit<F> {
     }
 }
 
-pub struct LastSliceCircuit<F: FieldExt> {
+pub struct LastSliceCircuit<F: PrimeField> {
     pub k: u32,
     pub slice: Slice,
     _data: PhantomData<F>,
 }
 
-impl<F: FieldExt> LastSliceCircuit<F> {
+impl<F: PrimeField> LastSliceCircuit<F> {
     pub fn new(k: u32, slice: Slice) -> Result<Self, BuildingCircuitError> {
         {
             // entries is empty when called by without_witness
@@ -140,12 +140,12 @@ impl<F: FieldExt> LastSliceCircuit<F> {
         })
     }
 }
-pub enum ZkWasmCircuit<F: FieldExt> {
+pub enum ZkWasmCircuit<F: PrimeField> {
     Ongoing(OngoingCircuit<F>),
     LastSliceCircuit(LastSliceCircuit<F>),
 }
 
-impl<F: FieldExt> ZkWasmCircuit<F> {
+impl<F: PrimeField> ZkWasmCircuit<F> {
     pub fn new(k: u32, slice: Slice) -> Result<Self, BuildingCircuitError> {
         if slice.is_last_slice {
             Ok(ZkWasmCircuit::LastSliceCircuit(LastSliceCircuit::new(
@@ -176,7 +176,7 @@ trait _Encode {
     fn encode(&self) -> BigUint;
 }
 
-pub(self) trait _Lookup<F: FieldExt> {
+pub(self) trait _Lookup<F: PrimeField> {
     fn encode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
 
     fn configure_in_table(

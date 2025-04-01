@@ -12,7 +12,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -28,7 +28,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct ReturnConfig<F: FieldExt> {
+pub struct ReturnConfig<F: PrimeField> {
     keep: AllocatedBitCell<F>,
     drop: AllocatedCommonRangeCell<F>,
     is_i32: AllocatedBitCell<F>,
@@ -42,7 +42,7 @@ pub struct ReturnConfig<F: FieldExt> {
 
 pub struct ReturnConfigBuilder;
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ReturnConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for ReturnConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -117,7 +117,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ReturnConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ReturnConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ReturnConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant!(bn_to_field(
             &(BigUint::from(OpcodeClass::Return as u64) << OPCODE_CLASS_SHIFT)

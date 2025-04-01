@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::Fixed;
@@ -8,19 +8,19 @@ mod assign;
 mod configure;
 
 #[derive(Clone)]
-pub struct ExternalHostCallTableConfig<F: FieldExt> {
+pub struct ExternalHostCallTableConfig<F: PrimeField> {
     idx: Column<Fixed>,
     opcode: Column<Advice>,
     operand: Column<Advice>,
     _phantom: PhantomData<F>,
 }
 
-pub struct ExternalHostCallChip<F: FieldExt> {
+pub struct ExternalHostCallChip<F: PrimeField> {
     config: ExternalHostCallTableConfig<F>,
     maximal_available_rows: usize,
 }
 
-impl<F: FieldExt> ExternalHostCallChip<F> {
+impl<F: PrimeField> ExternalHostCallChip<F> {
     pub fn new(config: ExternalHostCallTableConfig<F>, maximal_available_rows: usize) -> Self {
         Self {
             config,

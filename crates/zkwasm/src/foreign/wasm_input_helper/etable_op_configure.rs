@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -33,7 +33,7 @@ use crate::foreign::wasm_input_helper::Op;
 use crate::foreign::EventTableForeignCallConfigBuilder;
 use crate::foreign::InternalHostPluginBuilder;
 
-pub struct ETableWasmInputHelperTableConfig<F: FieldExt> {
+pub struct ETableWasmInputHelperTableConfig<F: PrimeField> {
     plugin_index: usize,
     is_wasm_input_op: AllocatedBitCell<F>,
     is_wasm_output_op: AllocatedBitCell<F>,
@@ -59,7 +59,7 @@ impl InternalHostPluginBuilder for ETableWasmInputHelperTableConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableForeignCallConfigBuilder<F>
+impl<F: PrimeField> EventTableForeignCallConfigBuilder<F>
     for ETableWasmInputHelperTableConfigBuilder
 {
     fn configure(
@@ -162,7 +162,7 @@ impl<F: FieldExt> EventTableForeignCallConfigBuilder<F>
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableWasmInputHelperTableConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ETableWasmInputHelperTableConfig<F> {
     fn sp_diff(&self, meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
         Some(self.is_wasm_output_op.expr(meta))
     }

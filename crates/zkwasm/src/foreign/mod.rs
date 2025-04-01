@@ -3,7 +3,7 @@ use crate::circuits::etable::allocator::EventTableCellAllocator;
 use crate::circuits::etable::constraint_builder::ConstraintBuilder;
 use crate::circuits::etable::EventTableCommonConfig;
 use crate::circuits::etable::EventTableOpcodeConfig;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -17,7 +17,7 @@ pub fn foreign_table_enable_lines(k: u32) -> usize {
     1 << (k as usize - 1)
 }
 
-pub trait ForeignTableConfig<F: FieldExt> {
+pub trait ForeignTableConfig<F: PrimeField> {
     fn configure_in_table(
         &self,
         meta: &mut ConstraintSystem<F>,
@@ -26,7 +26,7 @@ pub trait ForeignTableConfig<F: FieldExt> {
     );
 }
 
-pub(crate) trait EventTableForeignCallConfigBuilder<F: FieldExt> {
+pub(crate) trait EventTableForeignCallConfigBuilder<F: PrimeField> {
     fn configure(
         self,
         common_config: &EventTableCommonConfig<F>,

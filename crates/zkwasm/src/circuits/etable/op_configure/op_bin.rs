@@ -11,7 +11,7 @@ use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
 use crate::constant_from_bn;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -26,7 +26,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct BinConfig<F: FieldExt> {
+pub struct BinConfig<F: PrimeField> {
     lhs: AllocatedU64CellWithFlagBitDyn<F>,
     rhs: AllocatedU64CellWithFlagBitDyn<F>,
 
@@ -63,7 +63,7 @@ pub struct BinConfig<F: FieldExt> {
 
 pub struct BinConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BinConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for BinConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -341,7 +341,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BinConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for BinConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for BinConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant!(bn_to_field(
             &(BigUint::from(OpcodeClass::Bin as u64) << OPCODE_CLASS_SHIFT)
@@ -461,37 +461,37 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BinConfig<F> {
 
         match class {
             BinOp::Add => {
-                self.is_add.assign(ctx, F::one())?;
+                self.is_add.assign(ctx, F::ONE)?;
                 self.overflow.assign_bn(
                     ctx,
                     &((BigUint::from(left) + BigUint::from(right)) >> shift),
                 )?;
             }
             BinOp::Sub => {
-                self.is_sub.assign(ctx, F::one())?;
+                self.is_sub.assign(ctx, F::ONE)?;
                 self.overflow.assign_bn(
                     ctx,
                     &((BigUint::from(right) + BigUint::from(value)) >> shift),
                 )?;
             }
             BinOp::Mul => {
-                self.is_mul.assign(ctx, F::one())?;
+                self.is_mul.assign(ctx, F::ONE)?;
                 self.aux1
                     .assign(ctx, ((left as u128 * right as u128) >> shift) as u64)?;
             }
             BinOp::UnsignedDiv => {
-                self.is_div_u.assign(ctx, F::one())?;
+                self.is_div_u.assign(ctx, F::ONE)?;
             }
             BinOp::UnsignedRem => {
-                self.is_rem_u.assign(ctx, F::one())?;
+                self.is_rem_u.assign(ctx, F::ONE)?;
             }
             BinOp::SignedDiv => {
-                self.is_div_s.assign(ctx, F::one())?;
-                self.is_div_s_or_rem_s.assign(ctx, F::one())?;
+                self.is_div_s.assign(ctx, F::ONE)?;
+                self.is_div_s_or_rem_s.assign(ctx, F::ONE)?;
             }
             BinOp::SignedRem => {
-                self.is_rem_s.assign(ctx, F::one())?;
-                self.is_div_s_or_rem_s.assign(ctx, F::one())?;
+                self.is_rem_s.assign(ctx, F::ONE)?;
+                self.is_div_s_or_rem_s.assign(ctx, F::ONE)?;
             }
         };
 
@@ -544,7 +544,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BinConfig<F> {
         }
 
         if var_type == VarType::I32 {
-            self.is_i32.assign(ctx, F::one())?;
+            self.is_i32.assign(ctx, F::ONE)?;
         };
 
         self.memory_table_lookup_stack_read_rhs.assign(
@@ -591,6 +591,6 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BinConfig<F> {
     }
 
     fn sp_diff(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
-        Some(constant!(F::one()))
+        Some(constant!(F::ONE))
     }
 }

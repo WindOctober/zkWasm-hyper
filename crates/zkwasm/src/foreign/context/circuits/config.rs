@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
@@ -13,7 +13,7 @@ use crate::foreign::ForeignTableConfig;
 
 use super::ContextContHelperTableConfig;
 
-impl<F: FieldExt> ContextContHelperTableConfig<F> {
+impl<F: PrimeField> ContextContHelperTableConfig<F> {
     pub fn configure(meta: &mut ConstraintSystem<F>, from_zero_index: Column<Fixed>) -> Self {
         let input = meta.named_advice_column("context_input".to_string());
         let output = meta.named_advice_column("context_output".to_string());
@@ -29,7 +29,7 @@ impl<F: FieldExt> ContextContHelperTableConfig<F> {
     }
 }
 
-impl<F: FieldExt> ForeignTableConfig<F> for ContextContHelperTableConfig<F> {
+impl<F: PrimeField> ForeignTableConfig<F> for ContextContHelperTableConfig<F> {
     fn configure_in_table(
         &self,
         meta: &mut ConstraintSystem<F>,

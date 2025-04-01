@@ -8,7 +8,7 @@ use crate::circuits::utils::step_status::StepStatus;
 use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -20,7 +20,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct BrTableConfig<F: FieldExt> {
+pub struct BrTableConfig<F: PrimeField> {
     keep: AllocatedBitCell<F>,
     keep_is_i32: AllocatedBitCell<F>,
     keep_value: AllocatedU64Cell<F>,
@@ -43,7 +43,7 @@ pub struct BrTableConfig<F: FieldExt> {
 
 pub struct BrTableConfigBuilder;
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BrTableConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for BrTableConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -169,7 +169,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BrTableConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for BrTableConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for BrTableConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_br_table(self.targets_len.expr(meta))
     }
@@ -214,7 +214,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrTableConfig<F> {
                 if !keep.is_empty() {
                     let keep_type: VarType = keep[0].into();
 
-                    self.keep.assign(ctx, F::one())?;
+                    self.keep.assign(ctx, F::ONE)?;
                     self.keep_value.assign(ctx, keep_values[0])?;
                     self.keep_is_i32
                         .assign_bool(ctx, keep_type == VarType::I32)?;

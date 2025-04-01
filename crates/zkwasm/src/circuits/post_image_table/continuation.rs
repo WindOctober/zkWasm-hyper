@@ -5,7 +5,7 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::Mutex;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::plonk::Advice;
@@ -90,7 +90,7 @@ macro_rules! assign {
 }
 
 #[derive(Clone)]
-pub(in crate::circuits) struct PostImageTableConfig<F: FieldExt> {
+pub(in crate::circuits) struct PostImageTableConfig<F: PrimeField> {
     memory_addr_sel: Column<Fixed>,
     inherited_frame_table_sel: Column<Fixed>,
     post_image_table: Column<Advice>,
@@ -100,7 +100,7 @@ pub(in crate::circuits) struct PostImageTableConfig<F: FieldExt> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> PostImageTableConfig<F> {
+impl<F: PrimeField> PostImageTableConfig<F> {
     pub(in crate::circuits) fn configure(
         meta: &mut ConstraintSystem<F>,
         memory_addr_sel: Option<Column<Fixed>>,
@@ -176,11 +176,11 @@ impl<F: FieldExt> PostImageTableConfig<F> {
     }
 }
 
-pub(in crate::circuits) struct PostImageTableChip<F: FieldExt> {
+pub(in crate::circuits) struct PostImageTableChip<F: PrimeField> {
     config: PostImageTableConfig<F>,
 }
 
-impl<F: FieldExt> PostImageTableChip<F> {
+impl<F: PrimeField> PostImageTableChip<F> {
     pub(in crate::circuits) fn new(config: PostImageTableConfig<F>) -> Self {
         Self { config }
     }

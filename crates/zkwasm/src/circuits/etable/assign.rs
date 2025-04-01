@@ -1,4 +1,5 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::Field;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::circuit::Region;
@@ -64,7 +65,7 @@ use crate::circuits::utils::Context;
  * |          |  0   |   0    | constant 0 |      |        | permutation with post image table/jops constrain with jtable
  */
 #[derive(Debug)]
-pub(in crate::circuits) struct EventTablePermutationCells<F: FieldExt> {
+pub(in crate::circuits) struct EventTablePermutationCells<F: Field> {
     pub(in crate::circuits) rest_mops: AssignedCell<F, F>,
     // rest_jops cell at first step
     pub(in crate::circuits) rest_jops: FrameEtablePermutationCells<F>,
@@ -78,7 +79,7 @@ struct ExtraStatus {
     external_host_call_index: u32,
 }
 
-impl<F: FieldExt> EventTableChip<F> {
+impl<F: PrimeField> EventTableChip<F> {
     fn assign_step_state<T: Borrow<ExtraStatus>>(
         &self,
         ctx: &mut Context<'_, F>,
@@ -194,7 +195,7 @@ impl<F: FieldExt> EventTableChip<F> {
                 || "etable: step sel",
                 self.config.step_sel,
                 ctx.offset,
-                || Ok(F::one()),
+                || Value::known(F::ONE),
             )?;
 
             ctx.step(EVENT_TABLE_ENTRY_ROWS as usize);
@@ -204,21 +205,21 @@ impl<F: FieldExt> EventTableChip<F> {
             || "etable: rest mops terminates",
             self.config.common_config.rest_mops_cell.cell.col,
             ctx.offset,
-            F::zero(),
+            F::ZERO,
         )?;
 
         ctx.region.assign_advice_from_constant(
             || "etable: rest call ops terminates",
             self.config.common_config.rest_call_ops_cell.cell.col,
             ctx.offset,
-            F::zero(),
+            F::ZERO,
         )?;
 
         ctx.region.assign_advice_from_constant(
             || "etable: rest return ops terminates",
             self.config.common_config.rest_return_ops_cell.cell.col,
             ctx.offset,
-            F::zero(),
+            F::ZERO,
         )?;
 
         Ok(())
@@ -233,18 +234,18 @@ impl<F: FieldExt> EventTableChip<F> {
             .config
             .common_config
             .rest_mops_cell
-            .assign(ctx, F::zero())?;
+            .assign(ctx, F::ZERO)?;
 
         let rest_call_ops_cell = self
             .config
             .common_config
             .rest_call_ops_cell
-            .assign(ctx, F::zero())?;
+            .assign(ctx, F::ZERO)?;
         let rest_return_ops_cell = self
             .config
             .common_config
             .rest_return_ops_cell
-            .assign(ctx, F::zero())?;
+            .assign(ctx, F::ZERO)?;
 
         Ok((
             rest_mops_cell,
@@ -428,10 +429,10 @@ impl<F: FieldExt> EventTableChip<F> {
                         let class: OpcodeClassPlain = (&instruction.opcode).into();
 
                         let op = self.config.common_config.ops[class.index()];
-                        assign_advice_cell!(&mut ctx, op, F::one());
+                        assign_advice_cell!(&mut ctx, op, F::ONE);
                     }
 
-                    assign_advice!(&mut ctx, enabled_cell, F::one());
+                    assign_advice!(&mut ctx, enabled_cell, F::ONE);
                     assign_advice!(
                         &mut ctx,
                         rest_mops_cell,
@@ -493,7 +494,7 @@ impl<F: FieldExt> EventTableChip<F> {
 
     pub(in crate::circuits) fn assign(
         &self,
-        layouter: impl Layouter<F>,
+        mut layouter: impl Layouter<F>,
         itable: &InstructionTable,
         event_table: &EventTableWithMemoryInfo,
         configure_table: &ConfigureTable,
@@ -505,7 +506,7 @@ impl<F: FieldExt> EventTableChip<F> {
         layouter.assign_region(
             || "event table",
             |region| {
-                let mut ctx = Context::new(region);
+                let mut ctx = Context::new(&region);
 
                 debug!("size of execution table: {}", event_table.0.len());
 
@@ -533,7 +534,7 @@ impl<F: FieldExt> EventTableChip<F> {
                 );
 
                 let termination_status = self.assign_entries(
-                    region,
+                    &region,
                     self.config.op_configs.clone(),
                     itable,
                     event_table,

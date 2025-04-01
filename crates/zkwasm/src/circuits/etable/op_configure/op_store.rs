@@ -17,7 +17,7 @@ use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
 use crate::constant_from_bn;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -31,7 +31,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct StoreConfig<F: FieldExt> {
+pub struct StoreConfig<F: PrimeField> {
     // offset in opcode
     opcode_store_offset: AllocatedU32Cell<F>,
 
@@ -82,7 +82,7 @@ pub struct StoreConfig<F: FieldExt> {
 
 pub struct StoreConfigBuilder;
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for StoreConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for StoreConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -432,7 +432,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for StoreConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for StoreConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for StoreConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         let store_size = self.is_eight_bytes.expr(meta) * constant_from!(3)
             + self.is_four_bytes.expr(meta) * constant_from!(2)

@@ -1,7 +1,8 @@
 use super::Context;
 use crate::constant_from;
 use crate::curr;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
+use halo2_proofs::circuit::Value;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -11,12 +12,12 @@ use halo2_proofs::plonk::VirtualCells;
 use std::marker::PhantomData;
 
 #[derive(Clone)]
-pub struct BitColumn<F: FieldExt> {
+pub struct BitColumn<F: PrimeField> {
     pub col: Column<Advice>,
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> BitColumn<F> {
+impl<F: PrimeField> BitColumn<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
         cols: &mut impl Iterator<Item = Column<Advice>>,
@@ -39,7 +40,7 @@ impl<F: FieldExt> BitColumn<F> {
             || "bit value",
             self.col,
             ctx.offset,
-            || Ok(if value { F::one() } else { F::zero() }),
+            || Value::known(if value { F::ONE } else { F::ZERO }),
         )?;
 
         Ok(())

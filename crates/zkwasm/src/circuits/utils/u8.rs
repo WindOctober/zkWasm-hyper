@@ -1,5 +1,5 @@
 use super::Context;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -8,12 +8,12 @@ use halo2_proofs::plonk::Fixed;
 use std::marker::PhantomData;
 
 #[derive(Clone)]
-pub struct U8Column<F: FieldExt> {
+pub struct U8Column<F: PrimeField> {
     pub col: Column<Advice>,
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> U8Column<F> {
+impl<F: PrimeField> U8Column<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
         (l_0, l_active, l_active_last): (Column<Fixed>, Column<Fixed>, Column<Fixed>),
@@ -24,7 +24,7 @@ impl<F: FieldExt> U8Column<F> {
             l_active_last,
             (0, F::from(0)),
             (u8::MAX as u32, F::from(u8::MAX as u64)),
-            (1, F::one()),
+            (1, F::ONE),
         );
 
         Self {

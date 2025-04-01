@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -11,7 +11,7 @@ use crate::fixed_curr;
 
 use super::ExternalHostCallTableConfig;
 
-impl<F: FieldExt> ExternalHostCallTableConfig<F> {
+impl<F: PrimeField> ExternalHostCallTableConfig<F> {
     pub(in crate::circuits) fn configure(meta: &mut ConstraintSystem<F>) -> Self {
         Self {
             idx: meta.fixed_column(),
@@ -22,7 +22,7 @@ impl<F: FieldExt> ExternalHostCallTableConfig<F> {
     }
 }
 
-impl<F: FieldExt> ConfigureLookupTable<F> for ExternalHostCallTableConfig<F> {
+impl<F: PrimeField> ConfigureLookupTable<F> for ExternalHostCallTableConfig<F> {
     fn configure_in_table(
         &self,
         meta: &mut ConstraintSystem<F>,

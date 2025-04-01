@@ -23,6 +23,7 @@ halo2_proofs.workspace = true
 indicatif = "0.17.7"
 console = "0.15.8"
 cfg-if.workspace = true
+plonkish_backend.workspace = true
 
 [features]
 default = []

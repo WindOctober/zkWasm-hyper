@@ -1,13 +1,13 @@
 use std::collections::BTreeMap;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
 
 use crate::foreign::ForeignTableConfig;
 
-pub(crate) struct ConstraintBuilder<'a, 'b, F: FieldExt> {
+pub(crate) struct ConstraintBuilder<'a, 'b, F: PrimeField> {
     meta: &'a mut ConstraintSystem<F>,
     foreign_table_configs: &'b BTreeMap<&'static str, Box<dyn ForeignTableConfig<F>>>,
     pub(crate) constraints: Vec<(
@@ -23,7 +23,7 @@ pub(crate) struct ConstraintBuilder<'a, 'b, F: FieldExt> {
     >,
 }
 
-impl<'a, 'b, F: FieldExt> ConstraintBuilder<'a, 'b, F> {
+impl<'a, 'b, F: PrimeField> ConstraintBuilder<'a, 'b, F> {
     pub(super) fn new(
         meta: &'a mut ConstraintSystem<F>,
         foreign_table_configs: &'b BTreeMap<&'static str, Box<dyn ForeignTableConfig<F>>>,

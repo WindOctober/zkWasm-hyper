@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Expression;
@@ -10,7 +10,7 @@ use specs::encode::image_table::ImageTableEncoder;
 
 use super::ImageTableConfig;
 
-impl<F: FieldExt> ImageTableConfig<F> {
+impl<F: PrimeField> ImageTableConfig<F> {
     pub(in crate::circuits) fn configure(
         meta: &mut ConstraintSystem<F>,
         memory_addr_sel: Option<Column<Fixed>>,

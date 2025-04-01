@@ -9,7 +9,7 @@ use crate::circuits::utils::step_status::StepStatus;
 use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -20,7 +20,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct ConversionConfig<F: FieldExt> {
+pub struct ConversionConfig<F: PrimeField> {
     value: AllocatedU64Cell<F>,
     value_is_i8: AllocatedBitCell<F>,
     value_is_i16: AllocatedBitCell<F>,
@@ -49,7 +49,7 @@ pub struct ConversionConfig<F: FieldExt> {
 
 pub struct ConversionConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ConversionConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for ConversionConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -202,7 +202,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ConversionConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ConversionConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ConversionConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_conversion::<Expression<F>>(
             self.sign_op.expr(meta),

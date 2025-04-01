@@ -1,19 +1,20 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::Layouter;
+use halo2_proofs::circuit::Value;
 use halo2_proofs::plonk::Error;
 use specs::external_host_call_table::ExternalHostCallTable;
 
 use super::ExternalHostCallChip;
 
-impl<F: FieldExt> ExternalHostCallChip<F> {
+impl<F: PrimeField> ExternalHostCallChip<F> {
     pub(in crate::circuits) fn assign(
         self,
-        layouter: impl Layouter<F>,
+        mut layouter: impl Layouter<F>,
         table: &ExternalHostCallTable,
     ) -> Result<(), Error> {
         layouter.assign_region(
             || "foreign table",
-            |region| {
+            |mut region| {
                 // Assign Fixed Column
                 {
                     for offset in 0..self.maximal_available_rows {
@@ -21,7 +22,7 @@ impl<F: FieldExt> ExternalHostCallChip<F> {
                             || "external host call idx",
                             self.config.idx,
                             offset,
-                            || Ok(F::from(offset as u64)),
+                            || Value::known(F::from(offset as u64)),
                         )?;
                     }
                 }
@@ -35,14 +36,14 @@ impl<F: FieldExt> ExternalHostCallChip<F> {
                             || "external host call opcode",
                             self.config.opcode,
                             offset,
-                            || Ok(F::zero()),
+                            || Value::known(F::ZERO),
                         )?;
 
                         region.assign_advice(
                             || "external host call operand",
                             self.config.operand,
                             offset,
-                            || Ok(F::zero()),
+                            || Value::known(F::ZERO),
                         )?;
                     }
 
@@ -53,14 +54,14 @@ impl<F: FieldExt> ExternalHostCallChip<F> {
                             || "external host call opcode",
                             self.config.opcode,
                             offset,
-                            || Ok(F::from(entry.op as u64)),
+                            || Value::known(F::from(entry.op as u64)),
                         )?;
 
                         region.assign_advice(
                             || "external host call operand",
                             self.config.operand,
                             offset,
-                            || Ok(F::from(entry.value)),
+                            || Value::known(F::from(entry.value)),
                         )?;
 
                         offset += 1;

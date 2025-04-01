@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 
 use anyhow::Error;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use num_bigint::BigUint;
 use num_traits::Zero;
 use rayon::iter::ParallelIterator;
@@ -226,7 +226,7 @@ impl ImageTableAssigner {
     }
 }
 
-pub(crate) fn encode_compilation_table_values<F: FieldExt>(
+pub(crate) fn encode_compilation_table_values<F: PrimeField>(
     k: u32,
     itable: &InstructionTable,
     br_table: &BrTable,
@@ -240,7 +240,7 @@ pub(crate) fn encode_compilation_table_values<F: FieldExt>(
     let initialization_state_handler = |_| Ok(initialization_state.map(|v| F::from((*v) as u64)));
 
     let inherited_frame_entries_handler = |_| {
-        let mut cells = Box::new([F::zero(); INHERITED_FRAME_TABLE_ENTRIES]);
+        let mut cells = Box::new([F::ZERO; INHERITED_FRAME_TABLE_ENTRIES]);
 
         for (index, entry) in inherited_frame_table.iter().enumerate() {
             cells[index] = bn_to_field(&entry.encode());
@@ -283,7 +283,7 @@ pub(crate) fn encode_compilation_table_values<F: FieldExt>(
         Ok(cells)
     };
 
-    let padding_handler = |start, end| Ok(vec![F::zero(); end - start]);
+    let padding_handler = |start, end| Ok(vec![F::ZERO; end - start]);
 
     let init_memory_entries_handler = |_| {
         let layouter = InitMemoryLayouter {
@@ -386,13 +386,13 @@ pub(crate) fn encode_compilation_table_values<F: FieldExt>(
         .unwrap()
 }
 
-pub(crate) trait EncodeImageTable<F: FieldExt> {
+pub(crate) trait EncodeImageTable<F: PrimeField> {
     fn encode_pre_compilation_table_values(&self, k: u32) -> ImageTableLayouter<F>;
 
     fn encode_post_compilation_table_values(&self, k: u32) -> ImageTableLayouter<F>;
 }
 
-impl<F: FieldExt> EncodeImageTable<F> for Slice {
+impl<F: PrimeField> EncodeImageTable<F> for Slice {
     fn encode_pre_compilation_table_values(&self, k: u32) -> ImageTableLayouter<F> {
         encode_compilation_table_values(
             k,
@@ -418,7 +418,7 @@ impl<F: FieldExt> EncodeImageTable<F> for Slice {
     }
 }
 
-impl<F: FieldExt> ImageTableLayouter<F> {
+impl<F: PrimeField> ImageTableLayouter<F> {
     pub fn plain(&self) -> Vec<F> {
         let mut buf = vec![];
 

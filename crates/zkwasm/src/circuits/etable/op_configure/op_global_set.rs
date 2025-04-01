@@ -9,7 +9,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -19,7 +19,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct GlobalSetConfig<F: FieldExt> {
+pub struct GlobalSetConfig<F: PrimeField> {
     idx_cell: AllocatedCommonRangeCell<F>,
     is_i32_cell: AllocatedBitCell<F>,
     value_cell: AllocatedU64Cell<F>,
@@ -29,7 +29,7 @@ pub struct GlobalSetConfig<F: FieldExt> {
 
 pub struct GlobalSetConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for GlobalSetConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for GlobalSetConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -74,7 +74,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for GlobalSetConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for GlobalSetConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for GlobalSetConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_global_set(self.idx_cell.expr(meta))
     }
@@ -122,7 +122,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for GlobalSetConfig<F> {
     }
 
     fn sp_diff(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
-        Some(constant!(F::one()))
+        Some(constant!(F::ONE))
     }
 
     fn mops(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {

@@ -46,7 +46,7 @@ use crate::foreign::wasm_input_helper::etable_op_configure::ETableWasmInputHelpe
 use crate::foreign::EventTableForeignCallConfigBuilder;
 use crate::foreign::ForeignTableConfig;
 use crate::foreign::InternalHostPluginBuilder;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -78,7 +78,7 @@ pub(crate) const OP_CAPABILITY: usize = 32;
 const FOREIGN_LOOKUP_CAPABILITY: usize = 6;
 
 #[derive(Clone)]
-pub struct EventTableCommonConfig<F: FieldExt> {
+pub struct EventTableCommonConfig<F: PrimeField> {
     enabled_cell: AllocatedBitCell<F>,
     ops: [AllocatedBitCell<F>; OP_CAPABILITY],
 
@@ -108,7 +108,7 @@ pub struct EventTableCommonConfig<F: FieldExt> {
     external_foreign_call_lookup_cell: AllocatedUnlimitedCell<F>,
 }
 
-pub(in crate::circuits::etable) trait EventTableOpcodeConfigBuilder<F: FieldExt> {
+pub(in crate::circuits::etable) trait EventTableOpcodeConfigBuilder<F: PrimeField> {
     fn configure(
         common: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -116,7 +116,7 @@ pub(in crate::circuits::etable) trait EventTableOpcodeConfigBuilder<F: FieldExt>
     ) -> Box<dyn EventTableOpcodeConfig<F>>;
 }
 
-pub trait EventTableOpcodeConfig<F: FieldExt> {
+pub trait EventTableOpcodeConfig<F: PrimeField> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
     fn assign(
         &self,
@@ -216,19 +216,19 @@ pub trait EventTableOpcodeConfig<F: FieldExt> {
     }
 }
 
-struct OpcodeConfig<F: FieldExt>(Box<dyn EventTableOpcodeConfig<F>>);
+struct OpcodeConfig<F: PrimeField>(Box<dyn EventTableOpcodeConfig<F>>);
 
-unsafe impl<F: FieldExt> Send for OpcodeConfig<F> {}
-unsafe impl<F: FieldExt> Sync for OpcodeConfig<F> {}
+unsafe impl<F: PrimeField> Send for OpcodeConfig<F> {}
+unsafe impl<F: PrimeField> Sync for OpcodeConfig<F> {}
 
 #[derive(Clone)]
-pub struct EventTableConfig<F: FieldExt> {
+pub struct EventTableConfig<F: PrimeField> {
     pub step_sel: Column<Fixed>,
     pub common_config: EventTableCommonConfig<F>,
     op_configs: Arc<BTreeMap<OpcodeClassPlain, OpcodeConfig<F>>>,
 }
 
-impl<F: FieldExt> EventTableConfig<F> {
+impl<F: PrimeField> EventTableConfig<F> {
     pub(crate) fn configure(
         meta: &mut ConstraintSystem<F>,
         (l_0, l_active, l_active_last): (Column<Fixed>, Column<Fixed>, Column<Fixed>),
@@ -679,13 +679,13 @@ impl<F: FieldExt> EventTableConfig<F> {
 }
 
 #[derive(Clone)]
-pub struct EventTableChip<F: FieldExt> {
+pub struct EventTableChip<F: PrimeField> {
     config: EventTableConfig<F>,
     // The maximal number of entries(which sel = 1) of etable
     capability: usize,
 }
 
-impl<F: FieldExt> EventTableChip<F> {
+impl<F: PrimeField> EventTableChip<F> {
     pub(super) fn new(
         config: EventTableConfig<F>,
         capability: usize,

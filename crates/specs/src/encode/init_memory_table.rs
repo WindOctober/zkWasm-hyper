@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::halo2curves::ff::PrimeField;
 use num_bigint::BigUint;
 use num_bigint::ToBigUint;
 use num_traits::identities::One;
@@ -50,7 +50,7 @@ pub fn encode_init_memory_table_entry<T: FromBn>(
     }
 }
 
-pub fn init_memory_table_entry_encode_update_offset<T: FieldExt>(
+pub fn init_memory_table_entry_encode_update_offset<T: PrimeField>(
     encode: T,
     offset: impl FnOnce() -> T,
 ) -> T {

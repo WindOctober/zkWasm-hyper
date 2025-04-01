@@ -2,12 +2,12 @@ use super::JumpTableConfig;
 use crate::circuits::jtable::FrameTableValueOffset;
 use crate::fixed_curr;
 use crate::nextn;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
 use specs::encode::frame_table::encode_frame_table_entry;
 
-impl<F: FieldExt> JumpTableConfig<F> {
+impl<F: PrimeField> JumpTableConfig<F> {
     pub(super) fn enable(&self, meta: &mut VirtualCells<F>) -> Expression<F> {
         nextn!(meta, self.value, FrameTableValueOffset::Enable as i32)
     }
@@ -63,7 +63,7 @@ pub(crate) trait JtableLookupEntryEncode<F> {
     ) -> Expression<F>;
 }
 
-impl<F: FieldExt> JtableLookupEntryEncode<F> for JumpTableConfig<F> {
+impl<F: PrimeField> JtableLookupEntryEncode<F> for JumpTableConfig<F> {
     fn encode_lookup(
         current_last_jump_eid: Expression<F>,
         next_last_jump_eid: Expression<F>,

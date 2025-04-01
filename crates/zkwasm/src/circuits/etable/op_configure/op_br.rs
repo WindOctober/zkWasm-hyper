@@ -8,7 +8,7 @@ use crate::circuits::utils::step_status::StepStatus;
 use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -18,7 +18,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct BrConfig<F: FieldExt> {
+pub struct BrConfig<F: PrimeField> {
     keep_cell: AllocatedBitCell<F>,
     is_i32_cell: AllocatedBitCell<F>,
     drop_cell: AllocatedCommonRangeCell<F>,
@@ -30,7 +30,7 @@ pub struct BrConfig<F: FieldExt> {
 
 pub struct BrConfigBuilder;
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BrConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for BrConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -78,7 +78,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for BrConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for BrConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for BrConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_br(
             self.drop_cell.expr(meta),
@@ -108,7 +108,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for BrConfig<F> {
                 if !keep.is_empty() {
                     let keep_type: VarType = keep[0].into();
 
-                    self.keep_cell.assign(ctx, F::one())?;
+                    self.keep_cell.assign(ctx, F::ONE)?;
                     self.value_cell.assign(ctx, keep_values[0])?;
                     self.is_i32_cell.assign(ctx, F::from(keep_type as u64))?;
 

@@ -1,7 +1,8 @@
 use super::Context;
 use crate::circuits::rtable::RangeTableConfig;
 use crate::curr;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
+use halo2_proofs::circuit::Value;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -11,12 +12,12 @@ use halo2_proofs::plonk::VirtualCells;
 use std::marker::PhantomData;
 
 #[derive(Clone)]
-pub struct CommonRangeColumn<F: FieldExt> {
+pub struct CommonRangeColumn<F: PrimeField> {
     pub col: Column<Advice>,
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> CommonRangeColumn<F> {
+impl<F: PrimeField> CommonRangeColumn<F> {
     pub fn configure(
         meta: &mut ConstraintSystem<F>,
         cols: &mut impl Iterator<Item = Column<Advice>>,
@@ -40,7 +41,7 @@ impl<F: FieldExt> CommonRangeColumn<F> {
             || "common range value",
             self.col,
             ctx.offset,
-            || Ok(value.into()),
+            || Value::known(F::from(value)),
         )?;
 
         Ok(())

@@ -1,5 +1,6 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::Layouter;
+use halo2_proofs::circuit::Value;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::Error;
@@ -71,14 +72,14 @@ impl BitTableTrait for EventTableWithMemoryInfo {
     }
 }
 
-impl<F: FieldExt> BitTableChip<F> {
+impl<F: PrimeField> BitTableChip<F> {
     fn init(&self, ctx: &mut Context<'_, F>) -> Result<(), Error> {
         for _ in 0..self.max_available_rows / STEP_SIZE {
             ctx.region.assign_fixed(
                 || "bit table: block sel",
                 self.config.block_sel,
                 ctx.offset + BLOCK_SEL_OFFSET,
-                || Ok(F::one()),
+                || Value::known(F::ONE),
             )?;
 
             for i in U8_OFFSET {
@@ -86,7 +87,7 @@ impl<F: FieldExt> BitTableChip<F> {
                     || "bit table: lookup sel",
                     self.config.lookup_sel,
                     ctx.offset + i,
-                    || Ok(F::one()),
+                    || Value::known(F::ONE),
                 )?;
             }
 
@@ -95,7 +96,7 @@ impl<F: FieldExt> BitTableChip<F> {
                     || "bit table: u32 sel",
                     self.config.u32_sel,
                     ctx.offset + i,
-                    || Ok(F::one()),
+                    || Value::known(F::ONE),
                 )?;
             }
 
@@ -113,7 +114,7 @@ impl<F: FieldExt> BitTableChip<F> {
                 || "bit table op",
                 self.config.op,
                 ctx.offset + i,
-                || Ok(op_index),
+                || Value::known(op_index),
             )?;
         }
 
@@ -123,7 +124,7 @@ impl<F: FieldExt> BitTableChip<F> {
                     || "bit table op",
                     self.config.helper,
                     ctx.offset + i,
-                    || Ok(F::one()),
+                    || Value::known(F::ONE),
                 )?;
             }
         }
@@ -149,7 +150,7 @@ impl<F: FieldExt> BitTableChip<F> {
             || "bit table: assign u64",
             col,
             ctx.offset,
-            || Ok(F::from(value.count_ones() as u64)),
+            || Value::known(F::from(value.count_ones() as u64)),
         )?;
 
         macro_rules! assign_u32 {
@@ -158,7 +159,7 @@ impl<F: FieldExt> BitTableChip<F> {
                     || "bit table: assign u32",
                     col,
                     ctx.offset + $offset,
-                    || Ok(F::from($v as u64)),
+                    || Value::known(F::from($v as u64)),
                 )?;
 
                 for (index, byte_count_ones) in $bytes.into_iter().enumerate() {
@@ -166,7 +167,7 @@ impl<F: FieldExt> BitTableChip<F> {
                         || "bit table: assign u8",
                         col,
                         ctx.offset + 1 + index + $offset,
-                        || Ok(F::from(byte_count_ones as u64)),
+                        || Value::known(F::from(byte_count_ones as u64)),
                     )?;
                 }
             }};
@@ -191,7 +192,7 @@ impl<F: FieldExt> BitTableChip<F> {
             || "bit table: assign u64",
             col,
             ctx.offset,
-            || Ok(F::from(value)),
+            || Value::known(F::from(value)),
         )?;
 
         macro_rules! assign_u32 {
@@ -202,7 +203,7 @@ impl<F: FieldExt> BitTableChip<F> {
                     || "bit table: assign u32",
                     col,
                     ctx.offset + $offset,
-                    || Ok(F::from($v as u64)),
+                    || Value::known(F::from($v as u64)),
                 )?;
 
                 for (index, byte) in bytes.into_iter().enumerate() {
@@ -210,7 +211,7 @@ impl<F: FieldExt> BitTableChip<F> {
                         || "bit table: assign u8",
                         col,
                         ctx.offset + 1 + index + $offset,
-                        || Ok(F::from(byte as u64)),
+                        || Value::known(F::from(byte as u64)),
                     )?;
                 }
             }};
@@ -248,13 +249,13 @@ impl<F: FieldExt> BitTableChip<F> {
 
     pub(crate) fn assign(
         &self,
-        layouter: impl Layouter<F>,
+        mut layouter: impl Layouter<F>,
         event_table: Vec<BitTableAssign>,
     ) -> Result<(), Error> {
         layouter.assign_region(
             || "bit table",
             |region| {
-                let mut ctx = Context::new(region);
+                let mut ctx = Context::new(&region);
 
                 self.init(&mut ctx)?;
 

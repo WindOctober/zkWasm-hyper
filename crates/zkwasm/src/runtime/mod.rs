@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use specs::etable::EventTableEntry;
 use specs::external_host_call_table::ExternalHostCallSignature;
 use specs::mtable::AccessType;
@@ -37,7 +37,7 @@ pub struct ExecutionResult<R> {
 }
 
 impl<R> ExecutionResult<R> {
-    pub fn public_inputs_and_outputs<F: FieldExt>(&self) -> Vec<F> {
+    pub fn public_inputs_and_outputs<F: PrimeField>(&self) -> Vec<F> {
         self.public_inputs_and_outputs
             .iter()
             .map(|v| F::from(*v))

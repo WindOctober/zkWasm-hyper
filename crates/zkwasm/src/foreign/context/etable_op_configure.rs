@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -32,7 +32,7 @@ use crate::foreign::InternalHostPluginBuilder;
 
 use super::circuits::CONTEXT_FOREIGN_TABLE_KEY;
 
-pub struct ETableContextHelperTableConfig<F: FieldExt> {
+pub struct ETableContextHelperTableConfig<F: PrimeField> {
     plugin_index: u64,
 
     is_context_in_op: AllocatedBitCell<F>,
@@ -55,7 +55,9 @@ impl InternalHostPluginBuilder for ETableContextHelperTableConfigBuilder {
         Self { index }
     }
 }
-impl<F: FieldExt> EventTableForeignCallConfigBuilder<F> for ETableContextHelperTableConfigBuilder {
+impl<F: PrimeField> EventTableForeignCallConfigBuilder<F>
+    for ETableContextHelperTableConfigBuilder
+{
     fn configure(
         self,
         common_config: &EventTableCommonConfig<F>,
@@ -145,7 +147,7 @@ impl<F: FieldExt> EventTableForeignCallConfigBuilder<F> for ETableContextHelperT
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableContextHelperTableConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ETableContextHelperTableConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant_from_bn!(
             &(BigUint::from(OpcodeClass::ForeignPluginStart as u64 + self.plugin_index)
@@ -236,7 +238,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ETableContextHelperTableConfig<F
          * context_out: sp + 1
          * context_in: sp - 1
          */
-        Some(constant!(-F::one()) + constant_from!(2) * self.is_context_out_op.expr(meta))
+        Some(constant!(-F::ONE) + constant_from!(2) * self.is_context_out_op.expr(meta))
     }
 
     fn is_context_input_op(&self, entry: &EventTableEntry) -> bool {

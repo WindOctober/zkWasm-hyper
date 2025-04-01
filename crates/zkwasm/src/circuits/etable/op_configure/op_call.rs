@@ -11,7 +11,7 @@ use crate::circuits::utils::step_status::StepStatus;
 use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -19,7 +19,7 @@ use specs::encode::frame_table::encode_frame_table_entry;
 use specs::encode::opcode::encode_call;
 use specs::step::StepInfo;
 
-pub struct CallConfig<F: FieldExt> {
+pub struct CallConfig<F: PrimeField> {
     // indicates if the calling returned in current slice.
     is_returned_cell: AllocatedBitCell<F>,
     index_cell: AllocatedCommonRangeCell<F>,
@@ -28,7 +28,7 @@ pub struct CallConfig<F: FieldExt> {
 
 pub struct CallConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for CallConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for CallConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -66,7 +66,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for CallConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for CallConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for CallConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         encode_call(self.index_cell.expr(meta))
     }

@@ -10,7 +10,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -23,7 +23,7 @@ use specs::mtable::LocationType;
 use specs::mtable::VarType;
 use specs::step::StepInfo;
 
-pub struct LocalTeeConfig<F: FieldExt> {
+pub struct LocalTeeConfig<F: PrimeField> {
     offset_cell: AllocatedCommonRangeCell<F>,
     is_i32_cell: AllocatedBitCell<F>,
     value_cell: AllocatedU64Cell<F>,
@@ -33,7 +33,7 @@ pub struct LocalTeeConfig<F: FieldExt> {
 
 pub struct LocalTeeConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for LocalTeeConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for LocalTeeConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -78,7 +78,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for LocalTeeConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for LocalTeeConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for LocalTeeConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant!(bn_to_field(
             &(BigUint::from(OpcodeClass::LocalTee as u64) << OPCODE_CLASS_SHIFT)

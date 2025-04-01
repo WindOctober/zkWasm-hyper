@@ -1,8 +1,9 @@
 use super::utils::bn_to_field;
 use crate::circuits::bit_table::BitTableOp;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::Layouter;
+use halo2_proofs::circuit::Value;
 use halo2_proofs::plonk::ConstraintSystem;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
@@ -54,7 +55,7 @@ struct OpTable {
 }
 
 #[derive(Clone)]
-pub struct RangeTableConfig<F: FieldExt> {
+pub struct RangeTableConfig<F: PrimeField> {
     // [0 .. common_range())
     common_range_col: TableColumn,
     op_table: OpTable,
@@ -66,7 +67,7 @@ pub fn pow_table_power_encode<T: FromBn>(power: T) -> T {
     T::from_bn(&BigUint::from(POW_TABLE_POWER_START)) + power
 }
 
-impl<F: FieldExt> RangeTableConfig<F> {
+impl<F: PrimeField> RangeTableConfig<F> {
     pub fn configure(meta: &mut ConstraintSystem<F>) -> Self {
         // Shared by u8 lookup and bit table lookup
         let u8_col_multiset = meta.lookup_table_column();
@@ -132,25 +133,25 @@ impl<F: FieldExt> RangeTableConfig<F> {
     }
 }
 
-pub struct RangeTableChip<F: FieldExt> {
+pub struct RangeTableChip<F: PrimeField> {
     config: RangeTableConfig<F>,
 }
 
-impl<F: FieldExt> RangeTableChip<F> {
+impl<F: PrimeField> RangeTableChip<F> {
     pub fn new(config: RangeTableConfig<F>) -> Self {
         RangeTableChip { config }
     }
 
-    pub fn init(&self, layouter: impl Layouter<F>, k: u32) -> Result<(), Error> {
+    pub fn init(&self, mut layouter: impl Layouter<F>, k: u32) -> Result<(), Error> {
         layouter.assign_table(
             || "common range table",
-            |table| {
+            |mut table| {
                 for i in 0..common_range(k) {
                     table.assign_cell(
                         || "range table",
                         self.config.common_range_col,
                         i as usize,
-                        || Ok(F::from(i as u64)),
+                        || Value::known(F::from(i as u64)),
                     )?;
                 }
                 Ok(())
@@ -160,7 +161,7 @@ impl<F: FieldExt> RangeTableChip<F> {
         {
             layouter.assign_table(
                 || "op lookup table",
-                |table| {
+                |mut table| {
                     let mut offset = 0;
 
                     for op in BitOp::iter() {
@@ -170,28 +171,28 @@ impl<F: FieldExt> RangeTableChip<F> {
                                     || "range table",
                                     self.config.op_table.op,
                                     offset,
-                                    || Ok(F::from(op as u64)),
+                                    || Value::known(F::from(op as u64)),
                                 )?;
 
                                 table.assign_cell(
                                     || "range table",
                                     self.config.op_table.left,
                                     offset,
-                                    || Ok(F::from(left as u64)),
+                                    || Value::known(F::from(left as u64)),
                                 )?;
 
                                 table.assign_cell(
                                     || "range table",
                                     self.config.op_table.right,
                                     offset,
-                                    || Ok(F::from(right as u64)),
+                                    || Value::known(F::from(right as u64)),
                                 )?;
 
                                 table.assign_cell(
                                     || "range table",
                                     self.config.op_table.result,
                                     offset,
-                                    || Ok(F::from(op.eval(left as u64, right as u64))),
+                                    || Value::known(F::from(op.eval(left as u64, right as u64))),
                                 )?;
 
                                 offset += 1;
@@ -204,28 +205,28 @@ impl<F: FieldExt> RangeTableChip<F> {
                             || "range table",
                             self.config.op_table.op,
                             offset,
-                            || Ok(F::from(BitTableOp::Popcnt.index() as u64)),
+                            || Value::known(F::from(BitTableOp::Popcnt.index() as u64)),
                         )?;
 
                         table.assign_cell(
                             || "range table",
                             self.config.op_table.left,
                             offset,
-                            || Ok(F::from(left as u64)),
+                            || Value::known(F::from(left as u64)),
                         )?;
 
                         table.assign_cell(
                             || "range table",
                             self.config.op_table.right,
                             offset,
-                            || Ok(F::from(0)),
+                            || Value::known(F::from(0)),
                         )?;
 
                         table.assign_cell(
                             || "range table",
                             self.config.op_table.result,
                             offset,
-                            || Ok(F::from(left.count_ones() as u64)),
+                            || Value::known(F::from(left.count_ones() as u64)),
                         )?;
 
                         offset += 1;
@@ -238,28 +239,28 @@ impl<F: FieldExt> RangeTableChip<F> {
                             || "range table",
                             self.config.op_table.op,
                             offset,
-                            || Ok(F::from(POW_OP)),
+                            || Value::known(F::from(POW_OP)),
                         )?;
 
                         table.assign_cell(
                             || "range table",
                             self.config.op_table.left,
                             offset,
-                            || Ok(F::zero()),
+                            || Value::known(F::ZERO),
                         )?;
 
                         table.assign_cell(
                             || "range table",
                             self.config.op_table.right,
                             offset,
-                            || Ok(F::zero()),
+                            || Value::known(F::ZERO),
                         )?;
 
                         table.assign_cell(
                             || "range table",
                             self.config.op_table.result,
                             offset,
-                            || Ok(F::zero()),
+                            || Value::known(F::ZERO),
                         )?;
 
                         offset += 1;
@@ -269,28 +270,28 @@ impl<F: FieldExt> RangeTableChip<F> {
                                 || "range table",
                                 self.config.op_table.op,
                                 offset,
-                                || Ok(F::from(POW_OP)),
+                                || Value::known(F::from(POW_OP)),
                             )?;
 
                             table.assign_cell(
                                 || "range table",
                                 self.config.op_table.left,
                                 offset,
-                                || Ok(F::zero()),
+                                || Value::known(F::ZERO),
                             )?;
 
                             table.assign_cell(
                                 || "range table",
                                 self.config.op_table.right,
                                 offset,
-                                || Ok(F::from(POW_TABLE_POWER_START + i)),
+                                || Value::known(F::from(POW_TABLE_POWER_START + i)),
                             )?;
 
                             table.assign_cell(
                                 || "range table",
                                 self.config.op_table.result,
                                 offset,
-                                || Ok(bn_to_field::<F>(&(BigUint::from(1u64) << i))),
+                                || Value::known(bn_to_field::<F>(&(BigUint::from(1u64) << i))),
                             )?;
 
                             offset += 1;

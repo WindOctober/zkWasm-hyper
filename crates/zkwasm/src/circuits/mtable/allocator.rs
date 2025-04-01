@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -20,12 +20,12 @@ use crate::nextn;
 
 use super::MEMORY_TABLE_ENTRY_ROWS;
 
-pub(super) trait MemoryTableCellExpression<F: FieldExt> {
+pub(super) trait MemoryTableCellExpression<F: PrimeField> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
     fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
 }
 
-impl<F: FieldExt> MemoryTableCellExpression<F> for AllocatedCell<F> {
+impl<F: PrimeField> MemoryTableCellExpression<F> for AllocatedCell<F> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         nextn!(meta, self.col, self.rot + MEMORY_TABLE_ENTRY_ROWS)
     }
@@ -37,7 +37,7 @@ impl<F: FieldExt> MemoryTableCellExpression<F> for AllocatedCell<F> {
 
 macro_rules! impl_cell {
     ($x: ident) => {
-        impl<F: FieldExt> MemoryTableCellExpression<F> for $x<F> {
+        impl<F: PrimeField> MemoryTableCellExpression<F> for $x<F> {
             fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
                 self.cell.next_expr(meta)
             }
@@ -54,7 +54,7 @@ impl_cell!(AllocatedCommonRangeCell);
 impl_cell!(AllocatedU16Cell);
 impl_cell!(AllocatedUnlimitedCell);
 
-impl<F: FieldExt> MemoryTableCellExpression<F> for AllocatedU32Cell<F> {
+impl<F: PrimeField> MemoryTableCellExpression<F> for AllocatedU32Cell<F> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         self.u16_cells_le[0].next_expr(meta)
             + (self.u16_cells_le[1].next_expr(meta) * constant_from!(1 << 16))
@@ -81,7 +81,7 @@ const U32_CELLS: usize = if cfg!(feature = "continuation") { 5 } else { 2 };
 const U64_CELLS: usize = 1;
 
 #[derive(Debug, Clone)]
-pub(super) struct MemoryTableCellAllocator<F: FieldExt> {
+pub(super) struct MemoryTableCellAllocator<F: PrimeField> {
     all_cols: BTreeMap<MemoryTableCellType, Vec<Column<Advice>>>,
     free_cells: BTreeMap<MemoryTableCellType, (usize, u32)>,
     free_u32_cells: Vec<AllocatedU32Cell<F>>,
@@ -89,7 +89,7 @@ pub(super) struct MemoryTableCellAllocator<F: FieldExt> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> MemoryTableCellAllocator<F> {
+impl<F: PrimeField> MemoryTableCellAllocator<F> {
     pub fn assert_no_free_cells(&self) {
         for (t, (i, j)) in &self.free_cells {
             let cols = self.all_cols.get(t).unwrap();

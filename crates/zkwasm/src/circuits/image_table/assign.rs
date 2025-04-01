@@ -1,4 +1,4 @@
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::circuit::AssignedCell;
 use halo2_proofs::circuit::Layouter;
 use halo2_proofs::plonk::Error;
@@ -57,7 +57,7 @@ macro_rules! assign {
     }};
 }
 
-impl<F: FieldExt> ImageTableChip<F> {
+impl<F: PrimeField> ImageTableChip<F> {
     pub(crate) fn assign(
         &self,
         layouter: impl Layouter<F>,
@@ -120,7 +120,7 @@ impl<F: FieldExt> ImageTableChip<F> {
                     ctx.offset = start_offset;
 
                     (start_offset..end_offset)
-                        .map(|_| assign!(ctx, self.config.col, F::zero()))
+                        .map(|_| assign!(ctx, self.config.col, F::ZERO))
                         .collect::<Result<Vec<_>, Error>>()
                 };
 

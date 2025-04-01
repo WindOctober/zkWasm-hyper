@@ -14,7 +14,7 @@ use crate::constant_from;
 use crate::curr;
 use crate::fixed_curr;
 use crate::nextn;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Advice;
 use halo2_proofs::plonk::Column;
 use halo2_proofs::plonk::ConstraintSystem;
@@ -28,12 +28,12 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 use std::marker::PhantomData;
 
-pub(super) trait EventTableCellExpression<F: FieldExt> {
+pub(super) trait EventTableCellExpression<F: PrimeField> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
     fn _prev_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F>;
 }
 
-impl<F: FieldExt> EventTableCellExpression<F> for AllocatedCell<F> {
+impl<F: PrimeField> EventTableCellExpression<F> for AllocatedCell<F> {
     fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         nextn!(meta, self.col, self.rot + EVENT_TABLE_ENTRY_ROWS)
     }
@@ -45,7 +45,7 @@ impl<F: FieldExt> EventTableCellExpression<F> for AllocatedCell<F> {
 
 macro_rules! impl_cell {
     ($x: ident) => {
-        impl<F: FieldExt> EventTableCellExpression<F> for $x<F> {
+        impl<F: PrimeField> EventTableCellExpression<F> for $x<F> {
             fn next_expr(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
                 self.cell.next_expr(meta)
             }
@@ -64,7 +64,7 @@ impl_cell!(AllocatedCommonRangeCell);
 impl_cell!(AllocatedUnlimitedCell);
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedMemoryTableLookupReadCell<F: FieldExt> {
+pub(crate) struct AllocatedMemoryTableLookupReadCell<F: PrimeField> {
     pub(crate) encode_cell: AllocatedUnlimitedCell<F>,
     pub(crate) start_eid_cell: AllocatedUnlimitedCell<F>,
     pub(crate) end_eid_cell: AllocatedUnlimitedCell<F>,
@@ -74,14 +74,14 @@ pub(crate) struct AllocatedMemoryTableLookupReadCell<F: FieldExt> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct AllocatedMemoryTableLookupWriteCell<F: FieldExt> {
+pub(crate) struct AllocatedMemoryTableLookupWriteCell<F: PrimeField> {
     pub(crate) encode_cell: AllocatedUnlimitedCell<F>,
     pub(crate) start_eid_cell: AllocatedUnlimitedCell<F>,
     pub(crate) end_eid_cell: AllocatedUnlimitedCell<F>,
     pub(crate) value_cell: AllocatedUnlimitedCell<F>,
 }
 
-impl<F: FieldExt> AllocatedMemoryTableLookupReadCell<F> {
+impl<F: PrimeField> AllocatedMemoryTableLookupReadCell<F> {
     pub(crate) fn assign(
         &self,
         ctx: &mut Context<'_, F>,
@@ -118,7 +118,7 @@ impl<F: FieldExt> AllocatedMemoryTableLookupReadCell<F> {
     }
 }
 
-impl<F: FieldExt> AllocatedMemoryTableLookupWriteCell<F> {
+impl<F: PrimeField> AllocatedMemoryTableLookupWriteCell<F> {
     pub(crate) fn assign(
         &self,
         ctx: &mut Context<'_, F>,
@@ -175,14 +175,14 @@ const UNLIMITED_COLUMNS: usize = if cfg!(feature = "continuation") {
 const MEMORY_TABLE_LOOKUP_COLUMNS: usize = 2;
 
 #[derive(Clone, Copy)]
-pub(crate) struct AllocatedBitTableLookupCells<F: FieldExt> {
+pub(crate) struct AllocatedBitTableLookupCells<F: PrimeField> {
     pub(crate) op: AllocatedUnlimitedCell<F>,
     pub(crate) left: AllocatedUnlimitedCell<F>,
     pub(crate) right: AllocatedUnlimitedCell<F>,
     pub(crate) result: AllocatedUnlimitedCell<F>,
 }
 
-impl<F: FieldExt> AllocatedBitTableLookupCells<F> {
+impl<F: PrimeField> AllocatedBitTableLookupCells<F> {
     pub(crate) fn assign(
         &self,
         ctx: &mut Context<'_, F>,
@@ -208,7 +208,7 @@ pub(crate) struct AllocatorFreeCellsProfiler {
 }
 
 impl AllocatorFreeCellsProfiler {
-    pub(crate) fn new<F: FieldExt>(allocator: &EventTableCellAllocator<F>) -> Self {
+    pub(crate) fn new<F: PrimeField>(allocator: &EventTableCellAllocator<F>) -> Self {
         Self {
             free_cells: allocator.free_cells.clone(),
             free_u32_cells: allocator.free_u32_cells.len(),
@@ -217,7 +217,7 @@ impl AllocatorFreeCellsProfiler {
         }
     }
 
-    pub(crate) fn update<F: FieldExt>(&mut self, allocator: &EventTableCellAllocator<F>) {
+    pub(crate) fn update<F: PrimeField>(&mut self, allocator: &EventTableCellAllocator<F>) {
         for (t, (i, j)) in allocator.free_cells.iter() {
             let v = self.free_cells.get_mut(t).unwrap();
 
@@ -239,7 +239,10 @@ impl AllocatorFreeCellsProfiler {
         self.free_u64_cells = usize::min(self.free_u64_cells, allocator.free_u64_cells.len());
     }
 
-    pub(crate) fn assert_no_free_cells<F: FieldExt>(&self, allocator: &EventTableCellAllocator<F>) {
+    pub(crate) fn assert_no_free_cells<F: PrimeField>(
+        &self,
+        allocator: &EventTableCellAllocator<F>,
+    ) {
         for (t, (i, j)) in &self.free_cells {
             let cols = allocator.all_cols.get(t).unwrap();
 
@@ -270,7 +273,7 @@ impl AllocatorFreeCellsProfiler {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct EventTableCellAllocator<F: FieldExt> {
+pub(crate) struct EventTableCellAllocator<F: PrimeField> {
     pub(crate) free_cells: BTreeMap<EventTableCellType, (usize, u32)>,
     all_cols: BTreeMap<EventTableCellType, Vec<Vec<Column<Advice>>>>,
     free_u32_cells: Vec<AllocatedU32Cell<F>>,
@@ -279,7 +282,7 @@ pub(crate) struct EventTableCellAllocator<F: FieldExt> {
     _mark: PhantomData<F>,
 }
 
-impl<F: FieldExt> EventTableCellAllocator<F> {
+impl<F: PrimeField> EventTableCellAllocator<F> {
     pub fn enable_equality(
         &mut self,
         meta: &mut ConstraintSystem<F>,

@@ -10,7 +10,7 @@ use crate::circuits::utils::table_entry::EventTableEntryWithMemoryInfo;
 use crate::circuits::utils::Context;
 use crate::constant;
 use crate::constant_from;
-use halo2_proofs::arithmetic::FieldExt;
+use halo2_proofs::arithmetic::PrimeField;
 use halo2_proofs::plonk::Error;
 use halo2_proofs::plonk::Expression;
 use halo2_proofs::plonk::VirtualCells;
@@ -22,7 +22,7 @@ use specs::itable::OPCODE_CLASS_SHIFT;
 use specs::mtable::LocationType;
 use specs::step::StepInfo;
 
-pub struct ConstConfig<F: FieldExt> {
+pub struct ConstConfig<F: PrimeField> {
     is_i32: AllocatedBitCell<F>,
     value: AllocatedU64Cell<F>,
     memory_table_lookup_stack_write: AllocatedMemoryTableLookupWriteCell<F>,
@@ -30,7 +30,7 @@ pub struct ConstConfig<F: FieldExt> {
 
 pub struct ConstConfigBuilder {}
 
-impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ConstConfigBuilder {
+impl<F: PrimeField> EventTableOpcodeConfigBuilder<F> for ConstConfigBuilder {
     fn configure(
         common_config: &EventTableCommonConfig<F>,
         allocator: &mut EventTableCellAllocator<F>,
@@ -61,7 +61,7 @@ impl<F: FieldExt> EventTableOpcodeConfigBuilder<F> for ConstConfigBuilder {
     }
 }
 
-impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig<F> {
+impl<F: PrimeField> EventTableOpcodeConfig<F> for ConstConfig<F> {
     fn opcode(&self, meta: &mut VirtualCells<'_, F>) -> Expression<F> {
         constant!(bn_to_field(
             &(BigUint::from(OpcodeClass::Const as u64) << OPCODE_CLASS_SHIFT)
@@ -79,7 +79,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig<F> {
         match &entry.eentry.step_info {
             StepInfo::I32Const { value } => {
                 self.value.assign(ctx, *value as u32 as u64)?;
-                self.is_i32.assign(ctx, F::one())?;
+                self.is_i32.assign(ctx, F::ONE)?;
                 self.memory_table_lookup_stack_write.assign(
                     ctx,
                     step.current.eid,
@@ -111,7 +111,7 @@ impl<F: FieldExt> EventTableOpcodeConfig<F> for ConstConfig<F> {
     }
 
     fn sp_diff(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
-        Some(constant!(-F::one()))
+        Some(constant!(-F::ONE))
     }
 
     fn mops(&self, _meta: &mut VirtualCells<'_, F>) -> Option<Expression<F>> {
