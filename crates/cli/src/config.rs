@@ -19,7 +19,6 @@ use halo2_proofs::pairing::bn256::Bn256;
 use halo2_proofs::pairing::bn256::G1Affine;
 use halo2_proofs::plonk::CircuitData;
 use halo2_proofs::poly::commitment::Params;
-use halo2_proofs::SerdeFormat;
 use indicatif::ProgressBar;
 use serde::Deserialize;
 use serde::Serialize;

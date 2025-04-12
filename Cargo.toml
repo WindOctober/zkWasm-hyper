@@ -5,7 +5,7 @@ resolver = "2"
 
 
 [patch."https://github.com/DelphinusLab/halo2-gpu-specific.git"]
-halo2_proofs = { path = "../halo2-hyper/halo2_proofs" , default-features = true}
+halo2_proofs = { path = "../halo2-gpu-specific/halo2_proofs" , default-features = true}
 
 [workspace.dependencies]
 anyhow = { version = "1.0.68", features = ["backtrace"] }

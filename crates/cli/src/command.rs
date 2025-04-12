@@ -95,7 +95,7 @@ impl SetupArg {
             )?;
 
             match setup_circuit {
-                ZkWasmCircuit::Ongoing(circuit) => unimplemented!(),
+                ZkWasmCircuit::Ongoing(_) => unimplemented!(),
                 ZkWasmCircuit::LastSliceCircuit(circuit) => SetupArg::_setup_circuit_data(
                     params,
                     &circuit,
