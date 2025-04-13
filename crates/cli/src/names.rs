@@ -17,26 +17,26 @@ pub(crate) fn name_of_circuit_data(name: &str, is_last_circuit: bool) -> String 
     }
 }
 
-// FIXME: adapt batcher crate, however the crate should provice this function
-#[inline(always)]
-pub(crate) fn name_of_loadinfo(name: &str) -> String {
-    format!("{}.loadinfo.json", name)
-}
+// // FIXME: adapt batcher crate, however the crate should provice this function
+// #[inline(always)]
+// pub(crate) fn name_of_loadinfo(name: &str) -> String {
+//     format!("{}.loadinfo.json", name)
+// }
 
-#[inline(always)]
-pub(crate) fn name_of_witness(name: &str, index: usize) -> String {
-    format!("{}.{}.witness.json", name, index)
-}
+// #[inline(always)]
+// pub(crate) fn name_of_witness(name: &str, index: usize) -> String {
+//     format!("{}.{}.witness.json", name, index)
+// }
 
-#[inline(always)]
-pub(crate) fn name_of_instance(name: &str, index: usize) -> String {
-    format!("{}.{}.instance.data", name, index)
-}
+// #[inline(always)]
+// pub(crate) fn name_of_instance(name: &str, index: usize) -> String {
+//     format!("{}.{}.instance.data", name, index)
+// }
 
-#[inline(always)]
-pub(crate) fn name_of_transcript(name: &str, index: usize) -> String {
-    format!("{}.{}.transcript.data", name, index)
-}
+// #[inline(always)]
+// pub(crate) fn name_of_transcript(name: &str, index: usize) -> String {
+//     format!("{}.{}.transcript.data", name, index)
+// }
 
 #[inline(always)]
 pub(crate) fn name_of_etable_slice(name: &str, index: usize) -> String {

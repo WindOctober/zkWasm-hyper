@@ -1,11 +1,9 @@
 use std::fs::File;
-use std::io::Cursor;
 use std::io::Read;
 use std::io::Write;
 use std::path::Path;
 use std::path::PathBuf;
 
-use anyhow::Result;
 use console::style;
 use delphinus_zkwasm::circuits::ZkWasmCircuit;
 use delphinus_zkwasm::loader::slice::Slices;
@@ -13,37 +11,39 @@ use delphinus_zkwasm::loader::Module;
 use delphinus_zkwasm::loader::ZkWasmLoader;
 use delphinus_zkwasm::runtime::host::default_env::ExecutionArg;
 use delphinus_zkwasm::runtime::host::HostEnvBuilder;
-use delphinus_zkwasm::runtime::monitor::statistic_monitor::StatisticMonitor;
 use delphinus_zkwasm::runtime::monitor::table_monitor::TableMonitor;
 use halo2_proofs::pairing::bn256::Bn256;
-use halo2_proofs::pairing::bn256::G1Affine;
-use halo2_proofs::plonk::CircuitData;
-use halo2_proofs::poly::commitment::Params;
-use indicatif::ProgressBar;
+use plonkish_backend::backend;
+use plonkish_backend::backend::PlonkishBackend;
+use plonkish_backend::backend::PlonkishCircuit;
+use plonkish_backend::halo2_curves::bn256::Bn256 as PBN256;
+use plonkish_backend::pcs::multilinear;
+use plonkish_backend::pcs::univariate;
+use plonkish_backend::transform::circuit::get_zkwasm_circuit;
+use plonkish_backend::util::end_timer;
+use plonkish_backend::util::start_timer;
+use plonkish_backend::util::transcript::InMemoryTranscript;
+use plonkish_backend::util::transcript::Keccak256Transcript;
+use rand::rngs::StdRng;
+use rand::SeedableRng;
 use serde::Deserialize;
 use serde::Serialize;
 use specs::slice_backend::SliceBackendBuilder;
 
 use crate::args::HostMode;
 use crate::args::Scheme;
-use crate::names::name_of_circuit_data;
+
 use crate::names::name_of_etable_slice;
 use crate::names::name_of_external_host_call_table_slice;
 use crate::names::name_of_frame_table_slice;
-use crate::names::name_of_instance;
-use crate::names::name_of_loadinfo;
-use crate::names::name_of_params;
-use crate::names::name_of_transcript;
-use crate::names::name_of_witness;
-
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub(crate) struct CircuitDataMd5 {
     pub(crate) circuit_data_md5: String,
     pub(crate) verifying_key_md5: String,
 }
 
 #[cfg(not(feature = "continuation"))]
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub(crate) struct CircuitDataConfig {
     pub(crate) finalized_circuit: CircuitDataMd5,
 }
@@ -55,7 +55,7 @@ pub(crate) struct CircuitDataConfig {
     pub(crate) finalized_circuit: CircuitDataMd5,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub(crate) struct Config {
     pub(crate) name: String,
 
@@ -88,36 +88,6 @@ impl Config {
 
         Ok(())
     }
-
-    fn params_consistent_check(&self, params: &[u8]) -> anyhow::Result<()> {
-        let params_md5 = format!("{:x}", md5::compute(params));
-
-        if params_md5 != self.params_md5 {
-            anyhow::bail!(
-                "Params is inconsistent with the one used to build the circuit. \
-                    Maybe you have changed the params after setup the circuit?",
-            );
-        }
-
-        Ok(())
-    }
-
-    fn veryfying_key_consistent_check(
-        &self,
-        verifying_key: &[u8],
-        expected_md5: &str,
-    ) -> anyhow::Result<()> {
-        let verifying_key_md5 = format!("{:x}", md5::compute(verifying_key));
-
-        if verifying_key_md5 != expected_md5 {
-            anyhow::bail!(
-                "Verifying key is inconsistent with the one used to build the circuit. \
-                    Maybe you have changed the circuit data after setup the circuit?",
-            );
-        }
-
-        Ok(())
-    }
 }
 
 impl Config {
@@ -127,13 +97,13 @@ impl Config {
         Ok(())
     }
 
-    pub(crate) fn read(fd: &mut File) -> anyhow::Result<Self> {
-        let mut buf = Vec::new();
-        fd.read_to_end(&mut buf)?;
-        let config = bincode::deserialize(&buf)?;
+    // pub(crate) fn read(fd: &mut File) -> anyhow::Result<Self> {
+    //     let mut buf = Vec::new();
+    //     fd.read_to_end(&mut buf)?;
+    //     let config = bincode::deserialize(&buf)?;
 
-        Ok(config)
-    }
+    //     Ok(config)
+    // }
 }
 
 impl Config {
@@ -146,100 +116,11 @@ impl Config {
         ZkWasmLoader::parse_module(&buf)
     }
 
-    fn read_params(&self, params_dir: &Path) -> anyhow::Result<Params<G1Affine>> {
-        let path = params_dir.join(name_of_params(self.k));
-
-        let mut buf = Vec::new();
-        File::open(path)?.read_to_end(&mut buf)?;
-
-        self.params_consistent_check(&buf)?;
-
-        let params = Params::<G1Affine>::read(&mut Cursor::new(&mut buf))?;
-
-        Ok(params)
-    }
-
-    fn read_circuit_data(
-        &self,
-        path: &PathBuf,
-        expected_md5: &str,
-    ) -> anyhow::Result<CircuitData<G1Affine>> {
-        let mut buf = Vec::new();
-        File::open(path)?.read_to_end(&mut buf)?;
-
-        let circuit_data_md5 = format!("{:x}", md5::compute(&buf));
-
-        if circuit_data_md5 != expected_md5 {
-            anyhow::bail!(
-                "Circuit data is inconsistent with the one used to build the circuit. \
-                    Maybe you have changed the circuit data after setup the circuit?",
-            );
-        }
-
-        let circuit_data = CircuitData::<G1Affine>::read(&mut File::open(path)?)?;
-
-        Ok(circuit_data)
-    }
-
-    pub(crate) fn dry_run(
-        self,
-        env_builder: &dyn HostEnvBuilder,
-        wasm_image: &Path,
-        output_dir: &Path,
-        arg: ExecutionArg,
-        context_output_filename: Option<String>,
-        instruction_limit: Option<usize>,
-    ) -> Result<()> {
-        let module = self.read_wasm_image(wasm_image)?;
-
-        let env = env_builder.create_env(arg);
-
-        let mut monitor = StatisticMonitor::new(&self.phantom_functions, &env, instruction_limit);
-
-        let result = {
-            let loader = ZkWasmLoader::new(self.k, env)?;
-
-            let runner = loader.compile(&module, &mut monitor)?;
-
-            println!("{} Executing...", style("[1/2]").bold().dim(),);
-            let result = loader.run(runner, &mut monitor)?;
-
-            println!("total guest instructions used {:?}", result.guest_statics);
-            println!("total host api used {:?}", result.host_statics);
-
-            result
-        };
-
-        {
-            if let Some(context_output_filename) = context_output_filename {
-                let context_output_path = output_dir.join(context_output_filename);
-
-                println!(
-                    "{} Write context output to file {:?}...",
-                    style("[2/2]").bold().dim(),
-                    context_output_path
-                );
-
-                result
-                    .context_outputs
-                    .write(&mut File::create(&context_output_path)?)?;
-            } else {
-                println!(
-                    "{} Context output is not specified. Skip writing context output...",
-                    style("[2/2]").bold().dim()
-                );
-            }
-        }
-
-        Ok(())
-    }
-
     pub(crate) fn prove<B: SliceBackendBuilder>(
         self,
         slice_backend_builder: B,
         env_builder: &dyn HostEnvBuilder,
         wasm_image: &Path,
-        params_dir: &Path,
         output_dir: &Path,
         arg: ExecutionArg,
         context_output_filename: Option<String>,
@@ -247,13 +128,8 @@ impl Config {
         skip: usize,
         padding: Option<usize>,
     ) -> anyhow::Result<()> {
-        let mut cached_proving_key = None;
-
         println!("{} Load image...", style("[1/8]").bold().dim(),);
         let module = self.read_wasm_image(wasm_image)?;
-
-        println!("{} Load params...", style("[2/8]").bold().dim(),);
-        let params = self.read_params(params_dir)?;
 
         let env = env_builder.create_env(arg);
 
@@ -324,16 +200,8 @@ impl Config {
 
         println!("{} Creating proof(s)...", style("[7/8]").bold().dim(),);
 
-        let mut proof_load_info = ProofGenerationInfo::new(&self.name, self.k as usize);
-
-        let progress_bar = ProgressBar::new(if let Some(padding) = padding {
-            usize::max(tables.execution_tables.slice_backend.len(), padding) as u64
-        } else {
-            tables.execution_tables.slice_backend.len() as u64
-        });
-
+        // let mut proof_load_info = ProofGenerationInfo::new(&self.name, self.k as usize);
         if skip != 0 {
-            progress_bar.inc(skip as u64);
             println!("skip first {} slice(s)", skip);
         }
 
@@ -342,167 +210,67 @@ impl Config {
             .enumerate()
             .skip(skip)
             .peekable();
-        while let Some((index, circuit)) = slices.next() {
-            let _is_finalized_circuit = slices.peek().is_none();
-
-            if mock_test {
-                println!("mock test for slice {}...", index);
-                circuit.mock_test(instances.clone())?;
-            }
-
-            let mut cached_proving_key_or_read =
-                |file_name: &str, is_last_circuit, expected_md5| -> anyhow::Result<()> {
-                    if let Some((name, _)) = cached_proving_key.as_ref() {
-                        if name == file_name {
-                            return Ok(());
-                        }
-                    }
-
-                    let pk = self
-                        .read_circuit_data(
-                            &params_dir.join(name_of_circuit_data(&self.name, is_last_circuit)),
-                            expected_md5,
-                        )?
-                        .into_proving_key(&params);
-
-                    cached_proving_key = Some((file_name.to_string(), pk));
-
-                    Ok(())
-                };
-
-            #[cfg(not(feature = "continuation"))]
-            cached_proving_key_or_read(
-                &self.circuit_datas.finalized_circuit.circuit_data_md5,
-                true,
-                &self.circuit_datas.finalized_circuit.circuit_data_md5,
-            )?;
-
-            let circuit_data_name = name_of_circuit_data(&self.name, _is_finalized_circuit);
-
-            let proof_piece_info = ProofPieceInfo {
-                circuit: circuit_data_name,
-                instance_size: instances.len() as u32,
-                witness: name_of_witness(&self.name, index),
-                instance: name_of_instance(&self.name, index),
-                transcript: name_of_transcript(&self.name, index),
-            };
-
-            let pkey = &cached_proving_key.as_ref().unwrap().1;
-
-            let proof = match circuit {
-                ZkWasmCircuit::Ongoing(_) => unimplemented!(),
-                ZkWasmCircuit::LastSliceCircuit(circuit) => proof_piece_info
-                    .create_proof::<Bn256, _>(
-                        &circuit,
-                        &vec![instances.clone()],
-                        &params,
-                        pkey,
-                        proof_load_info.hashtype,
-                        self.scheme.into(),
-                    ),
-            };
-
-            proof_piece_info.save_proof_data(&vec![instances.clone()], &proof, output_dir);
-
-            proof_load_info.append_single_proof(proof_piece_info);
-
-            progress_bar.inc(1);
-        }
-        progress_bar.finish_and_clear();
-
-        {
-            let proof_load_info_path = output_dir.join(name_of_loadinfo(&self.name));
-            println!(
-                "{} Saving proof load info to {:?}...",
-                style("[8/8]").bold().dim(),
-                proof_load_info_path
-            );
-            proof_load_info.save(proof_load_info_path.parent().unwrap());
-        }
-
-        Ok(())
-    }
-
-    pub(crate) fn verify(self, params_dir: &Path, output_dir: &PathBuf) -> anyhow::Result<()> {
-        let mut maximal_public_inputs_size = 0;
-
-        let mut proofs = {
-            println!(
-                "{} Reading proofs from {:?}",
-                style("[1/2]").bold().dim(),
-                output_dir
-            );
-
-            let proof_load_info =
-                ProofGenerationInfo::load(&output_dir.join(&name_of_loadinfo(&self.name)));
-
-            let proofs: Vec<ProofInfo<Bn256>> =
-                ProofInfo::load_proof(output_dir, params_dir, &proof_load_info);
-
-            for proof in &proofs {
-                maximal_public_inputs_size = usize::max(
-                    maximal_public_inputs_size,
-                    proof
-                        .instances
-                        .iter()
-                        .fold(0, |acc, x| usize::max(acc, x.len())),
-                );
-            }
-
-            proofs
-        }
-        .into_iter()
-        .peekable();
-
-        println!(
-            "{} Found {} proofs, verifying..",
-            style("[2/2]").bold().dim(),
-            proofs.len()
+        let (index, circuit) = slices
+            .next()
+            .expect("Expected exactly one slice, but found none.");
+        assert!(
+            slices.peek().is_none(),
+            "Expected exactly one slice, but found more."
         );
 
-        let params_verifier = {
-            let params = self.read_params(params_dir)?;
-            params.verifier(maximal_public_inputs_size)?
-        };
-
-        let progress_bar = ProgressBar::new(proofs.len() as u64);
-        while let Some(proof) = proofs.next() {
-            {
-                let mut buf = Vec::new();
-                proof
-                    .vkey
-                    .write(&mut Cursor::new(&mut buf), SerdeFormat::Processed)?;
-
-                #[cfg(feature = "continuation")]
-                if proofs.peek().is_none() {
-                    self.veryfying_key_consistent_check(
-                        &buf,
-                        &self.circuit_datas.finalized_circuit.verifying_key_md5,
-                    )?;
-                } else {
-                    self.veryfying_key_consistent_check(
-                        &buf,
-                        &self.circuit_datas.on_going_circuit.verifying_key_md5,
-                    )?;
-                }
-
-                #[cfg(not(feature = "continuation"))]
-                self.veryfying_key_consistent_check(
-                    &buf,
-                    &self.circuit_datas.finalized_circuit.verifying_key_md5,
-                )?;
-            };
-
-            proof
-                .verify_proof(&params_verifier, self.scheme.into())
-                .unwrap();
-
-            progress_bar.inc(1);
+        if mock_test {
+            println!("mock test for slice {}...", index);
+            circuit.mock_test(instances.clone())?;
         }
-        progress_bar.finish_and_clear();
 
-        println!("{}", style("Verification succeeded!").green().bold().dim(),);
+        type GeminiKzg = multilinear::Gemini<univariate::UnivariateKzg<PBN256>>;
+        type HyperPlonk = backend::hyperplonk::HyperPlonk<GeminiKzg>;
 
+        let circuit = match circuit {
+            ZkWasmCircuit::Ongoing(_) => unimplemented!(),
+            ZkWasmCircuit::LastSliceCircuit(circuit) => circuit,
+        };
+        let zkcircuit = get_zkwasm_circuit::<HyperPlonk, Bn256, _>(
+            self.k,
+            std::slice::from_ref(&circuit),
+            instances,
+        );
+
+        let circuit_info = zkcircuit.circuit_info().unwrap();
+        let instances = zkcircuit.instances.clone();
+
+        let timer = start_timer(|| format!("setup-{}", self.k));
+        let param =
+            HyperPlonk::setup(&circuit_info, StdRng::from_seed(Default::default())).unwrap();
+        end_timer(timer);
+
+        let timer = start_timer(|| format!("preprocess-{}", self.k));
+        let (pp, vp) = HyperPlonk::preprocess(&param, &circuit_info).unwrap();
+        end_timer(timer);
+
+        let _timer = start_timer(|| format!("prove-{}", self.k));
+        let mut transcript = Keccak256Transcript::default();
+        HyperPlonk::prove(
+            &pp,
+            &zkcircuit,
+            &mut transcript,
+            StdRng::from_seed(Default::default()),
+        )
+        .unwrap();
+        let proof = transcript.into_proof();
+
+        let _timer = start_timer(|| format!("verify-{}", self.k));
+        let accept = {
+            let mut transcript = Keccak256Transcript::from_proof((), proof.as_slice());
+            HyperPlonk::verify(
+                &vp,
+                instances.as_slice(),
+                &mut transcript,
+                StdRng::from_seed(Default::default()),
+            )
+            .is_ok()
+        };
+        assert!(accept);
         Ok(())
     }
 }

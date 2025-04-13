@@ -12,12 +12,12 @@ use clap::ValueHint;
 
 use crate::args::HostMode;
 use crate::args::Scheme;
-use crate::command::DryRunArg;
+// use crate::command::DryRunArg;
 use crate::command::ProveArg;
 use crate::command::RunningArg;
 use crate::command::SetupArg;
 use crate::command::Subcommands;
-use crate::command::VerifyArg;
+// use crate::command::VerifyArg;
 use crate::ZkWasmCli;
 
 trait ArgBuilder<T> {
@@ -258,12 +258,12 @@ pub(crate) fn app() -> App<'static> {
     command!()
         .author("delphinus-lab")
         .arg(arg!(<NAME> "Name of the configuration."))
-        .arg(
-            arg!(
-                --params <PARAMS> "Directory to setup params and configuration."
-            )
-            .value_parser(value_parser!(PathBuf)),
-        )
+        // .arg(
+        //     arg!(
+        //         --params <PARAMS> "Directory to setup params and configuration."
+        //     )
+        //     .value_parser(value_parser!(PathBuf)),
+        // )
         .subcommand(setup_command())
         .subcommand(dry_run_command())
         .subcommand(prove_command())
@@ -299,15 +299,15 @@ impl From<&ArgMatches> for RunningArg {
     }
 }
 
-impl From<&ArgMatches> for DryRunArg {
-    fn from(val: &ArgMatches) -> Self {
-        DryRunArg {
-            wasm_image: WasmImageArg::parse(val).unwrap(),
-            running_arg: val.into(),
-            instruction_limit: InstructionLimitArg::parse(val),
-        }
-    }
-}
+// impl From<&ArgMatches> for DryRunArg {
+//     fn from(val: &ArgMatches) -> Self {
+//         DryRunArg {
+//             wasm_image: WasmImageArg::parse(val).unwrap(),
+//             running_arg: val.into(),
+//             instruction_limit: InstructionLimitArg::parse(val),
+//         }
+//     }
+// }
 
 impl From<&ArgMatches> for ProveArg {
     fn from(val: &ArgMatches) -> Self {
@@ -323,27 +323,27 @@ impl From<&ArgMatches> for ProveArg {
     }
 }
 
-impl From<&ArgMatches> for VerifyArg {
-    fn from(val: &ArgMatches) -> Self {
-        VerifyArg {
-            output_dir: OutputDirArg::parse(val),
-        }
-    }
-}
+// impl From<&ArgMatches> for VerifyArg {
+//     fn from(val: &ArgMatches) -> Self {
+//         VerifyArg {
+//             output_dir: OutputDirArg::parse(val),
+//         }
+//     }
+// }
 
 impl From<ArgMatches> for ZkWasmCli {
     fn from(arg: ArgMatches) -> ZkWasmCli {
         let subcommand = match arg.subcommand() {
             Some(("setup", sub_matches)) => Subcommands::Setup(sub_matches.into()),
-            Some(("dry-run", sub_matches)) => Subcommands::DryRun(sub_matches.into()),
+            // Some(("dry-run", sub_matches)) => Subcommands::DryRun(sub_matches.into()),
             Some(("prove", sub_matches)) => Subcommands::Prove(sub_matches.into()),
-            Some(("verify", sub_matches)) => Subcommands::Verify(sub_matches.into()),
+            // Some(("verify", sub_matches)) => Subcommands::Verify(sub_matches.into()),
             _ => unreachable!("unknown subcommand"),
         };
 
         ZkWasmCli {
             name: arg.get_one::<String>("NAME").unwrap().to_owned(),
-            params_dir: arg.get_one::<PathBuf>("params").unwrap().to_owned(),
+            params_dir: PathBuf::new(),
             subcommand,
         }
     }

@@ -16,6 +16,7 @@ num-traits = "0.2.15"
 parity-wasm = { version = "0.42.0", features = ["sign_ext"] }
 rayon = "1.8.0"
 regex = "1.10.2"
+
 static_assertions = "1.1.0"
 wasmi = { path = "third-party/wasmi" }
 [profile.dev]

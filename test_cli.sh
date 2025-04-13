@@ -9,10 +9,10 @@ CUDA="--features cuda"
 SCHEME="--scheme shplonk"
 
 test_default_cli() {
-    cargo build --release --features profile
+    cargo build --release
     # rm -rf params/*.data params/*.config output
-    $CLI --params ./params wasm_output setup --wasm ./fibonacci_wasm.wasm  $SCHEME -k 18
-    $CLI --params ./params wasm_output prove --wasm ./fibonacci_wasm.wasm --output ./output 
+    # $CLI --params ./params wasm_output setup --wasm ./fibonacci_wasm.wasm  $SCHEME -k 18
+    $CLI wasm_output prove --wasm crates/zkwasm/wasm/fibonacci.wasm --output ./output --public 5:i64
     # $CLI --params ./params wasm_output verify --output ./output
 }
 

@@ -246,12 +246,12 @@ pub(crate) struct RunningArg {
     pub(crate) context_output: Option<String>,
 }
 
-#[derive(Debug)]
-pub(crate) struct DryRunArg {
-    pub(crate) wasm_image: PathBuf,
-    pub(crate) running_arg: RunningArg,
-    pub(crate) instruction_limit: Option<usize>,
-}
+// #[derive(Debug)]
+// pub(crate) struct DryRunArg {
+//     pub(crate) wasm_image: PathBuf,
+//     pub(crate) running_arg: RunningArg,
+//     pub(crate) instruction_limit: Option<usize>,
+// }
 
 /// Execute the Wasm image and generate a proof.
 #[derive(Debug)]
@@ -268,17 +268,17 @@ pub(crate) struct ProveArg {
 }
 
 /// Verify the proof.
-#[derive(Debug, Args)]
-pub(crate) struct VerifyArg {
-    /// Path to the directory to proof.
-    #[clap(short = 'o', long = "output")]
-    pub(crate) output_dir: PathBuf,
-}
+// #[derive(Debug, Args)]
+// pub(crate) struct VerifyArg {
+//     /// Path to the directory to proof.
+//     #[clap(short = 'o', long = "output")]
+//     pub(crate) output_dir: PathBuf,
+// }
 
 #[derive(Debug)]
 pub(crate) enum Subcommands {
     Setup(SetupArg),
-    DryRun(DryRunArg),
+    // DryRun(DryRunArg),
     Prove(ProveArg),
-    Verify(VerifyArg),
+    // Verify(VerifyArg),
 }
