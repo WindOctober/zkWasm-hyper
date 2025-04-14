@@ -17,7 +17,7 @@ serde = { version = "1.0", features = ["derive", "rc"] }
 serde_json = "1.0"
 wabt = "0.10.0"
 delphinus-zkwasm = { path = "../zkwasm" }
-plonkish_backend = { path = "../../../plonkish/plonkish_backend"}
+plonkish_backend = { path = "../../../hyperplonk/plonkish_backend"}
 anyhow.workspace = true
 bincode.workspace = true
 halo2_proofs.workspace = true
