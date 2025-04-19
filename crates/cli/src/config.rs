@@ -260,17 +260,21 @@ impl Config {
         let proof = transcript.into_proof();
 
         let _timer = start_timer(|| format!("verify-{}", self.k));
-        let accept = {
-            let mut transcript = Keccak256Transcript::from_proof((), proof.as_slice());
-            HyperPlonk::verify(
-                &vp,
-                instances.as_slice(),
-                &mut transcript,
-                StdRng::from_seed(Default::default()),
-            )
-            .is_ok()
-        };
-        assert!(accept);
+        let mut transcript = Keccak256Transcript::from_proof((), proof.as_slice());
+        match HyperPlonk::verify(
+            &vp,
+            instances.as_slice(),
+            &mut transcript,
+            StdRng::from_seed(Default::default()),
+        ) {
+            Ok(_) => {
+                println!("✅ Proof verification succeeded");
+            }
+            Err(err) => {
+                panic!("❌ Proof verification failed: {:?}", err);
+            }
+        }
+
         Ok(())
     }
 }
