@@ -680,6 +680,7 @@ dependencies = [
  "group 0.12.1",
  "halo2_proofs 0.2.0",
  "halo2curves 0.3.3",
+ "itertools",
  "lazy_static",
  "log",
  "memmap",

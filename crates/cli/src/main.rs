@@ -73,7 +73,7 @@ fn main() -> Result<()> {
             let context_inputs = parse_args(&arg.running_arg.context_inputs);
 
             // TODO: revise to args.
-            config.k = 18;
+            config.k = 21;
             let env_builder: Box<dyn HostEnvBuilder> =
                 Box::new(DefaultHostEnvBuilder::new(config.k));
 
