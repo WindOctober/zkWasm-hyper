@@ -3,7 +3,7 @@
 #![allow(clippy::type_complexity)]
 #![feature(int_roundings)]
 #![feature(stmt_expr_attributes)]
-#![feature(trait_upcasting)]
+// #![feature(trait_upcasting)]
 
 pub mod checksum;
 pub mod circuits;

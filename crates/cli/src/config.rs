@@ -223,8 +223,8 @@ impl Config {
             circuit.mock_test(instances.clone())?;
         }
 
-        type GeminiKzg = multilinear::Gemini<univariate::UnivariateKzg<PBN256>>;
-        type HyperPlonk = backend::hyperplonk::HyperPlonk<GeminiKzg>;
+        type Zeromorph = multilinear::Zeromorph<univariate::UnivariateKzg<PBN256>>;
+        type HyperPlonk = backend::hyperplonk::HyperPlonk<Zeromorph>;
 
         let circuit = match circuit {
             ZkWasmCircuit::Ongoing(_) => unimplemented!(),
@@ -250,7 +250,7 @@ impl Config {
 
         let _timer = start_timer(|| format!("prove-{}", self.k));
         let mut transcript = Keccak256Transcript::default();
-        HyperPlonk::prove(
+        HyperPlonk::prove_with_shift(
             &pp,
             &zkcircuit,
             &mut transcript,
@@ -261,7 +261,7 @@ impl Config {
 
         let _timer = start_timer(|| format!("verify-{}", self.k));
         let mut transcript = Keccak256Transcript::from_proof((), proof.as_slice());
-        match HyperPlonk::verify(
+        match HyperPlonk::verify_with_shift(
             &vp,
             instances.as_slice(),
             &mut transcript,

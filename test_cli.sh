@@ -12,7 +12,7 @@ test_default_cli() {
     cargo build --release
     # rm -rf params/*.data params/*.config output
     # $CLI --params ./params wasm_output setup --wasm ./fibonacci_wasm.wasm  $SCHEME -k 18
-    RUST_BACKTRACE=1 $CLI wasm_output prove --wasm crates/zkwasm/wasm/fibonacci.wasm --output ./output --public 21:i64
+    RUST_BACKTRACE=1 $CLI wasm_output prove --wasm crates/zkwasm/wasm/fibonacci.wasm --output ./output --public 16:i64
     # $CLI --params ./params wasm_output verify --output ./output
 }
 
